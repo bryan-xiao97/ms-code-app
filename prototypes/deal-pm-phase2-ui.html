@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deal PM — Phase 2 UI Prototype</title>
+<style>
+  /* ---------- Solomon Partners palette ---------- */
+  :root {
+    --color-black: #000000;
+    --color-white: #FFFFFF;
+    --color-navy-primary: #141B4D;
+    --color-navy-deep: #070263;
+    --color-navy-deepest: #2B0454;
+    --color-indigo: #4F4CB1;
+    --color-sky: #178AE0;
+    --color-cyan-light: #85D6F9;
+    --color-solomon-blue: #003594;
+    --color-teal: #2FD1B2;
+    --color-ice-blue: #E3F7FC;
+    --color-lavender: #EDEAFB;
+    --color-link: #0E04C7;
+
+    /* Derived surfaces */
+    --hairline: rgba(20, 27, 77, 0.10);
+    --hairline-strong: rgba(20, 27, 77, 0.18);
+    --ink-muted: rgba(20, 27, 77, 0.62);
+    --ink-faint: rgba(20, 27, 77, 0.42);
+    --surface-tint: #F7FAFD;
+
+    --font-stack: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-stack);
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-navy-primary);
+    background: var(--color-white);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================
+     APP CHROME — top bar
+  ============================================================ */
+  .appbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 32px;
+    height: 64px;
+    padding: 0 48px;
+    background: var(--color-white);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--color-navy-deep);
+  }
+  .brand-bar {
+    width: 3px; height: 22px;
+    background: var(--color-sky);
+  }
+  .brand-mark {
+    font-weight: 600; font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-navy-deep);
+  }
+  .brand-sub {
+    font-weight: 400; font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding-left: 16px;
+    margin-left: 4px;
+    border-left: 1px solid var(--hairline);
+  }
+
+  .appbar-spacer { flex: 1; }
+
+  .appbar-nav {
+    display: flex; align-items: center; gap: 28px;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .appbar-nav a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    padding: 8px 0;
+    border-bottom: 2px solid transparent;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .appbar-nav a.is-active {
+    color: var(--color-navy-primary);
+    border-bottom-color: var(--color-sky);
+  }
+  .appbar-nav a:hover { color: var(--color-navy-primary); }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding-left: 24px; margin-left: 24px;
+    border-left: 1px solid var(--hairline);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--color-lavender);
+    color: var(--color-indigo);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 12px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 0 0 1px rgba(79, 76, 177, 0.25);
+  }
+  .user-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--color-navy-primary);
+  }
+  .user-role {
+    font-size: 11px; color: var(--ink-muted);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  /* ============================================================
+     PAGE CONTAINER
+  ============================================================ */
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px;
+  }
+
+  /* ============================================================
+     PAGE HEADER — eyebrow / title / meta
+  ============================================================ */
+  .page-eyebrow {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-indigo);
+    margin-bottom: 14px;
+  }
+  .page-title {
+    font-size: 36px; font-weight: 600;
+    color: var(--color-navy-primary);
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .page-meta {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--ink-muted);
+  }
+  .page-meta strong { color: var(--color-indigo); font-weight: 600; }
+
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  /* ============================================================
+     BUTTONS
+  ============================================================ */
+  .btn {
+    appearance: none;
+    border: 1px solid var(--hairline-strong);
+    background: var(--color-white);
+    color: var(--color-navy-primary);
+    font-family: var(--font-stack);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 10px 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn:hover { background: var(--surface-tint); border-color: var(--color-navy-primary); }
+  .btn-primary {
+    background: var(--color-teal);
+    color: var(--color-navy-deep);
+    border-color: var(--color-teal);
+  }
+  .btn-primary:hover { background: #25BFA1; border-color: #25BFA1; }
+  .btn-ghost {
+    border-color: transparent;
+    color: var(--color-indigo);
+    padding: 8px 12px;
+  }
+  .btn-ghost:hover { background: var(--color-lavender); color: var(--color-navy-primary); border-color: transparent; }
+
+  .icon { width: 14px; height: 14px; stroke-width: 1.6; }
+
+  /* ============================================================
+     FILTER CHIPS
+  ============================================================ */
+  .chips {
+    display: flex; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .chip {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--color-white);
+    color: var(--ink-muted);
+    border: 1px solid var(--hairline);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .chip:hover { color: var(--color-navy-primary); border-color: var(--hairline-strong); }
+  .chip.is-active {
+    background: var(--color-navy-primary);
+    color: var(--color-white);
+    border-color: var(--color-navy-primary);
+  }
+  .chip .count {
+    margin-left: 8px;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.7;
+  }
+
+  /* ============================================================
+     DEAL LIST TABLE
+  ============================================================ */
+  .deal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .deal-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--hairline-strong);
+    background: transparent;
+  }
+  .deal-table thead th:first-child { padding-left: 0; }
+  .deal-table thead th:last-child { padding-right: 0; text-align: right; }
+
+  .deal-table tbody tr {
+    border-bottom: 1px solid var(--hairline);
+    transition: background 120ms ease;
+    cursor: pointer;
+  }
+  .deal-table tbody tr:hover { background: var(--color-ice-blue); }
+  .deal-table tbody td {
+    padding: 18px 16px;
+    vertical-align: middle;
+  }
+  .deal-table tbody td:first-child { padding-left: 0; }
+  .deal-table tbody td:last-child { padding-right: 0; text-align: right; }
+
+  .deal-code {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .deal-name {
+    font-weight: 600;
+    color: var(--color-navy-primary);
+    font-size: 15px;
+  }
+  .deal-target {
+    color: var(--color-navy-primary);
+    font-weight: 400;
+  }
+  .deal-value {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .sector-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: var(--color-lavender);
+    color: var(--color-indigo);
+  }
+
+  .stage-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600;
+    color: var(--color-navy-primary);
+  }
+  .stage-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--color-sky);
+    box-shadow: 0 0 0 3px rgba(23, 138, 224, 0.15);
+  }
+  .stage-dot.preparation { background: var(--color-cyan-light); box-shadow: 0 0 0 3px rgba(133, 214, 249, 0.25); }
+  .stage-dot.marketing  { background: var(--color-sky); box-shadow: 0 0 0 3px rgba(23, 138, 224, 0.18); }
+  .stage-dot.bids       { background: var(--color-indigo); box-shadow: 0 0 0 3px rgba(79, 76, 177, 0.18); }
+  .stage-dot.diligence  { background: var(--color-navy-primary); box-shadow: 0 0 0 3px rgba(20, 27, 77, 0.18); }
+  .stage-dot.close      { background: var(--color-teal); box-shadow: 0 0 0 3px rgba(47, 209, 178, 0.20); }
+
+  .milestone-cell {
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .milestone-cell .name {
+    color: var(--color-navy-primary);
+    font-size: 13px;
+  }
+  .milestone-cell .date {
+    color: var(--ink-muted);
+    font-size: 12px;
+  }
+  .milestone-cell.due-soon .date { color: var(--color-teal); font-weight: 600; }
+
+  .timestamp { color: var(--ink-muted); font-size: 13px; }
+  .open-arrow { color: var(--ink-faint); }
+
+  /* ============================================================
+     DEAL WORKSPACE
+  ============================================================ */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+  }
+  .breadcrumb a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--color-navy-primary); }
+  .breadcrumb .sep { color: var(--ink-faint); }
+  .breadcrumb .current { color: var(--color-navy-primary); }
+
+  .deal-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    padding-bottom: 32px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .deal-header h1 {
+    margin: 0;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .deal-header .subtitle {
+    font-size: 16px;
+    color: var(--ink-muted);
+    margin-top: 8px;
+    font-weight: 400;
+  }
+  .deal-header .subtitle strong {
+    color: var(--color-indigo);
+    font-weight: 600;
+  }
+
+  .deal-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 32px;
+    margin-top: 24px;
+  }
+  .meta-cell {
+    border-left: 2px solid var(--color-sky);
+    padding-left: 12px;
+  }
+  .meta-cell .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .meta-cell .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+  }
+
+  .deal-header-right {
+    display: flex; flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .deal-actions { display: flex; gap: 8px; }
+
+  .stage-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: var(--color-ice-blue);
+    border-radius: 2px;
+    font-weight: 600;
+    color: var(--color-navy-deep);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .stage-badge .label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  /* tabs */
+  .tabs {
+    display: flex; align-items: stretch;
+    gap: 0;
+    border-bottom: 1px solid var(--hairline);
+    margin: 32px 0 40px;
+  }
+  .tab {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px 14px 16px;
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    font-family: var(--font-stack);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 120ms ease, border-color 120ms ease;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--color-navy-primary); }
+  .tab.is-active {
+    color: var(--color-navy-primary);
+    border-bottom-color: var(--color-sky);
+  }
+  .tab[disabled] {
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .tab[disabled] .badge {
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--ink-faint);
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-lavender);
+    color: var(--color-indigo);
+    text-transform: none;
+  }
+  .badge.muted {
+    background: transparent;
+    border: 1px solid var(--hairline);
+    color: var(--ink-muted);
+  }
+
+  /* ============================================================
+     OVERVIEW — composition
+  ============================================================ */
+  .overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 56px;
+  }
+
+  .section + .section { margin-top: 48px; }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+    margin: 0;
+    padding-left: 12px;
+    border-left: 3px solid var(--color-sky);
+    line-height: 1.2;
+  }
+  .section-meta {
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- Stage stepper ---------- */
+  .stepper {
+    position: relative;
+    padding: 32px 0 8px;
+  }
+  .stepper-track {
+    position: absolute;
+    left: 28px; right: 28px;
+    top: 60px;
+    height: 1px;
+    background: var(--hairline-strong);
+  }
+  .stepper-track-fill {
+    position: absolute;
+    left: 28px;
+    top: 60px;
+    height: 1px;
+    background: var(--color-sky);
+    width: calc((100% - 56px) * 1/4 + 0px);
+    transition: width 600ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    animation: drawTrack 900ms cubic-bezier(0.4, 0.0, 0.2, 1) 200ms both;
+  }
+  @keyframes drawTrack {
+    from { width: 0; }
+    to { width: calc((100% - 56px) * 1/4 + 0px); }
+  }
+
+  .stepper-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: relative;
+    z-index: 1;
+  }
+  .step {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px;
+    text-align: center;
+    animation: stepIn 400ms ease both;
+  }
+  .step:nth-child(1) { animation-delay: 100ms; }
+  .step:nth-child(2) { animation-delay: 200ms; }
+  .step:nth-child(3) { animation-delay: 300ms; }
+  .step:nth-child(4) { animation-delay: 400ms; }
+  .step:nth-child(5) { animation-delay: 500ms; }
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-marker {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px;
+    background: var(--color-white);
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink-muted);
+    transition: all 200ms ease;
+  }
+  .step.is-complete .step-marker {
+    background: var(--color-navy-primary);
+    border-color: var(--color-navy-primary);
+    color: var(--color-white);
+  }
+  .step.is-current .step-marker {
+    background: var(--color-sky);
+    border-color: var(--color-sky);
+    color: var(--color-white);
+    box-shadow: 0 0 0 6px rgba(23, 138, 224, 0.12);
+  }
+  .step.is-future .step-marker { background: var(--color-white); }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+    letter-spacing: 0.02em;
+  }
+  .step.is-future .step-label { color: var(--ink-muted); font-weight: 400; }
+  .step-sub {
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .step.is-current .step-sub {
+    color: var(--color-sky);
+    font-weight: 600;
+  }
+
+  .stage-selector-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 28px;
+    padding: 16px 20px;
+    background: var(--surface-tint);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+  }
+  .stage-selector-row .label {
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .stage-select {
+    appearance: none;
+    border: 1px solid var(--hairline-strong);
+    background: var(--color-white);
+    color: var(--color-navy-primary);
+    font-family: var(--font-stack);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 36px 8px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23141B4D' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  /* ---------- Milestone list ---------- */
+  .milestones {
+    margin-top: 8px;
+  }
+  .milestone {
+    display: grid;
+    grid-template-columns: 120px 16px 1fr auto;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--hairline);
+    transition: background 120ms ease;
+  }
+  .milestone:hover { background: var(--surface-tint); }
+  .milestone:last-child { border-bottom: none; }
+
+  .m-date {
+    font-size: 13px;
+    color: var(--color-navy-primary);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .m-date .month {
+    display: inline-block;
+    color: var(--ink-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    margin-right: 2px;
+    font-weight: 600;
+  }
+  .m-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--color-navy-primary);
+    margin: 0 auto;
+    box-shadow: 0 0 0 3px var(--color-white), 0 0 0 4px var(--hairline-strong);
+  }
+  .m-dot.complete { background: var(--ink-faint); box-shadow: 0 0 0 3px var(--color-white), 0 0 0 4px var(--hairline); }
+  .m-dot.upcoming { background: var(--color-sky); box-shadow: 0 0 0 3px var(--color-white), 0 0 0 4px rgba(23, 138, 224, 0.25); }
+  .m-dot.due-soon { background: var(--color-teal); box-shadow: 0 0 0 3px var(--color-white), 0 0 0 4px rgba(47, 209, 178, 0.30); }
+
+  .m-content { display: flex; flex-direction: column; gap: 2px; }
+  .m-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+  }
+  .m-name.is-complete { color: var(--ink-muted); text-decoration: line-through; text-decoration-color: var(--hairline-strong); }
+  .m-status {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .m-status.complete { color: var(--ink-faint); }
+  .m-status.upcoming { color: var(--color-sky); }
+  .m-status.due-soon { color: var(--color-teal); }
+
+  .m-actions {
+    display: flex; gap: 4px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+  .milestone:hover .m-actions { opacity: 1; }
+  .milestone.is-editing .m-actions { opacity: 1; }
+  .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-muted);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .icon-btn:hover {
+    background: var(--color-white);
+    border-color: var(--hairline-strong);
+    color: var(--color-navy-primary);
+  }
+  .icon-btn.danger:hover { color: #C0392B; border-color: rgba(192, 57, 43, 0.4); }
+
+  /* editing state */
+  .milestone.is-editing {
+    background: var(--color-lavender);
+    border-radius: 2px;
+    border-bottom-color: transparent;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin: 4px 0;
+  }
+  .m-edit-row {
+    display: flex; gap: 8px; align-items: center;
+    grid-column: 3 / span 1;
+  }
+  .input {
+    appearance: none;
+    font-family: var(--font-stack);
+    font-size: 14px;
+    color: var(--color-navy-primary);
+    border: 1px solid var(--color-indigo);
+    background: var(--color-white);
+    padding: 8px 10px;
+    border-radius: 2px;
+    outline: none;
+  }
+  .input:focus { box-shadow: 0 0 0 3px rgba(79, 76, 177, 0.15); }
+  .input.name { flex: 1; min-width: 180px; }
+  .input.date { width: 140px; }
+
+  .add-milestone {
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 8px;
+    background: transparent;
+    border: 1px dashed var(--hairline-strong);
+    color: var(--color-indigo);
+    font-family: var(--font-stack);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 14px 18px;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .add-milestone:hover {
+    background: var(--color-lavender);
+    border-color: var(--color-indigo);
+    color: var(--color-navy-primary);
+    border-style: solid;
+  }
+
+  /* ---------- Activity feed ---------- */
+  .activity-empty {
+    background: var(--color-ice-blue);
+    border-radius: 2px;
+    padding: 40px 32px;
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .activity-empty::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(23, 138, 224, 0.10), transparent 60%),
+      radial-gradient(circle at 0% 100%, rgba(79, 76, 177, 0.06), transparent 50%);
+    pointer-events: none;
+  }
+  .activity-empty > * { position: relative; }
+  .activity-icon {
+    width: 56px; height: 56px;
+    border-radius: 2px;
+    background: var(--color-white);
+    border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-sky);
+  }
+  .activity-empty h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-navy-primary);
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .activity-empty p {
+    font-size: 14px;
+    color: var(--ink-muted);
+    margin: 0;
+    max-width: 360px;
+  }
+  .activity-empty .sources {
+    margin-top: 4px;
+    display: flex; flex-direction: column; gap: 8px;
+    font-size: 12px;
+    color: var(--color-navy-primary);
+  }
+  .source-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .source-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--color-indigo);
+  }
+  .source-row .label { font-weight: 600; }
+  .source-row .phase {
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* footer */
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+    color: var(--ink-faint);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+
+  /* ============================================================
+     VIEW SWITCHER (prototype only)
+  ============================================================ */
+  .view { display: none; }
+  .view.is-active { display: block; animation: viewIn 220ms ease both; }
+  @keyframes viewIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* prototype banner */
+  .proto-banner {
+    background: var(--color-navy-deepest);
+    color: var(--color-white);
+    padding: 8px 48px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .proto-banner .switch {
+    display: flex; gap: 4px;
+  }
+  .proto-banner button {
+    appearance: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-family: var(--font-stack);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .proto-banner button:hover { color: var(--color-white); border-color: rgba(255, 255, 255, 0.4); }
+  .proto-banner button.is-active {
+    background: var(--color-sky);
+    color: var(--color-white);
+    border-color: var(--color-sky);
+  }
+
+  @media (max-width: 980px) {
+    .overview { grid-template-columns: 1fr; gap: 40px; }
+    .deal-header { grid-template-columns: 1fr; }
+    .deal-header-right { align-items: flex-start; }
+    .stepper-steps { grid-template-columns: repeat(5, 1fr); }
+    .step-label { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Prototype banner / view switcher -->
+<div class="proto-banner">
+  <span>Solomon Partners · Deal PM · Phase 2 Prototype</span>
+  <div class="switch">
+    <button class="is-active" data-view="list">Deal List</button>
+    <button data-view="workspace">Deal Workspace · Overview</button>
+  </div>
+</div>
+
+<!-- App bar -->
+<header class="appbar">
+  <div class="brand">
+    <div class="brand-bar"></div>
+    <div>
+      <div class="brand-mark">Solomon Partners</div>
+    </div>
+  </div>
+  <div class="brand-sub">Deal PM</div>
+
+  <div class="appbar-spacer"></div>
+
+  <nav class="appbar-nav">
+    <a href="#" class="is-active">Deals</a>
+    <a href="#">Pipeline</a>
+    <a href="#">Settings</a>
+  </nav>
+
+  <div class="user-chip">
+    <div class="avatar">BX</div>
+    <div>
+      <div class="user-name">Bryan Xiao</div>
+      <div class="user-role">Vice President</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     VIEW 1 — DEAL LIST
+============================================================ -->
+<main class="view is-active" data-view="list">
+  <div class="page">
+
+    <div class="page-head">
+      <div>
+        <div class="page-eyebrow">Active Engagements</div>
+        <h1 class="page-title">Deals</h1>
+        <div class="page-meta">
+          <strong>7 active</strong> · assigned to you across <strong>4 sectors</strong> ·
+          <span>last sync 2 min ago</span>
+        </div>
+      </div>
+      <button class="btn btn-primary">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Deal
+      </button>
+    </div>
+
+    <div class="chips">
+      <button class="chip is-active">All <span class="count">7</span></button>
+      <button class="chip">My Deals <span class="count">5</span></button>
+      <button class="chip">Preparation <span class="count">1</span></button>
+      <button class="chip">Marketing <span class="count">2</span></button>
+      <button class="chip">Bids <span class="count">2</span></button>
+      <button class="chip">Diligence <span class="count">1</span></button>
+      <button class="chip">Close <span class="count">1</span></button>
+    </div>
+
+    <table class="deal-table">
+      <thead>
+        <tr>
+          <th style="width: 28%">Deal</th>
+          <th style="width: 14%">Sector</th>
+          <th style="width: 16%">Stage</th>
+          <th style="width: 22%">Next milestone</th>
+          <th style="width: 14%">Last activity</th>
+          <th style="width: 6%"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="switchView('workspace')">
+          <td>
+            <div class="deal-code">SP-2026-014</div>
+            <div class="deal-name">Project Atlas</div>
+            <div class="deal-value">Specialty Chemicals carve-out · EV $480M–$540M</div>
+          </td>
+          <td><span class="sector-tag">Industrials</span></td>
+          <td>
+            <span class="stage-pill"><span class="stage-dot marketing"></span> Marketing</span>
+          </td>
+          <td>
+            <div class="milestone-cell due-soon">
+              <span class="name">CIM distribution to Tier 1 buyers</span>
+              <span class="date">May 26 · in 5 days</span>
+            </div>
+          </td>
+          <td class="timestamp">14 min ago</td>
+          <td>
+            <svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2026-011</div>
+            <div class="deal-name">Project Meridian</div>
+            <div class="deal-value">Healthcare services platform · EV $1.1B–$1.3B</div>
+          </td>
+          <td><span class="sector-tag">Healthcare</span></td>
+          <td><span class="stage-pill"><span class="stage-dot bids"></span> Bids</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">IOI deadline</span>
+              <span class="date">Jun 03</span>
+            </div>
+          </td>
+          <td class="timestamp">2 hours ago</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2026-008</div>
+            <div class="deal-name">Project Tessera</div>
+            <div class="deal-value">FinTech payments · EV $250M–$300M</div>
+          </td>
+          <td><span class="sector-tag">FIG</span></td>
+          <td><span class="stage-pill"><span class="stage-dot diligence"></span> Diligence</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">Mgmt presentations round 2</span>
+              <span class="date">Jun 09</span>
+            </div>
+          </td>
+          <td class="timestamp">Yesterday</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2026-005</div>
+            <div class="deal-name">Project Harborline</div>
+            <div class="deal-value">Logistics tech roll-up · EV $620M</div>
+          </td>
+          <td><span class="sector-tag">Industrials</span></td>
+          <td><span class="stage-pill"><span class="stage-dot bids"></span> Bids</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">LOI review with counsel</span>
+              <span class="date">Jun 12</span>
+            </div>
+          </td>
+          <td class="timestamp">3 days ago</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2026-002</div>
+            <div class="deal-name">Project Northstar</div>
+            <div class="deal-value">Vertical SaaS spin-out · EV $180M–$220M</div>
+          </td>
+          <td><span class="sector-tag">Technology</span></td>
+          <td><span class="stage-pill"><span class="stage-dot preparation"></span> Preparation</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">CIM draft complete</span>
+              <span class="date">Jun 16</span>
+            </div>
+          </td>
+          <td class="timestamp">4 days ago</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2025-097</div>
+            <div class="deal-name">Project Belvedere</div>
+            <div class="deal-value">Consumer brand portfolio · EV $360M</div>
+          </td>
+          <td><span class="sector-tag">Consumer</span></td>
+          <td><span class="stage-pill"><span class="stage-dot marketing"></span> Marketing</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">Buyer outreach wave 2</span>
+              <span class="date">Jun 18</span>
+            </div>
+          </td>
+          <td class="timestamp">1 week ago</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="deal-code">SP-2025-091</div>
+            <div class="deal-name">Project Lighthouse</div>
+            <div class="deal-value">Asset manager sale · EV $740M</div>
+          </td>
+          <td><span class="sector-tag">FIG</span></td>
+          <td><span class="stage-pill"><span class="stage-dot close"></span> Close</span></td>
+          <td>
+            <div class="milestone-cell">
+              <span class="name">Signing target</span>
+              <span class="date">May 30</span>
+            </div>
+          </td>
+          <td class="timestamp">1 week ago</td>
+          <td><svg class="icon open-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <span>Phase 2 · Deal PM Shell</span>
+      <span>Dataverse RLS · Business Unit scope</span>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================================
+     VIEW 2 — DEAL WORKSPACE (OVERVIEW)
+============================================================ -->
+<main class="view" data-view="workspace">
+  <div class="page">
+
+    <div class="breadcrumb">
+      <a href="#" onclick="switchView('list'); return false;">Deals</a>
+      <span class="sep">/</span>
+      <span class="current">Project Atlas</span>
+    </div>
+
+    <div class="deal-header">
+      <div>
+        <div class="page-eyebrow">SP-2026-014 · Sell-side mandate</div>
+        <h1>Project Atlas</h1>
+        <div class="subtitle">
+          Specialty Chemicals <strong>carve-out</strong> · target $480M–$540M EV · lead banker <strong>R. Chen</strong>
+        </div>
+
+        <div class="deal-meta-grid">
+          <div class="meta-cell">
+            <div class="label">Engaged</div>
+            <div class="value">Feb 04, 2026</div>
+          </div>
+          <div class="meta-cell">
+            <div class="label">Target close</div>
+            <div class="value">Q4 2026</div>
+          </div>
+          <div class="meta-cell">
+            <div class="label">Business Unit</div>
+            <div class="value">BU-014 · Industrials</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="deal-header-right">
+        <div class="stage-badge">
+          <span class="label">Stage</span>
+          <span class="stage-dot marketing"></span>
+          Marketing
+        </div>
+        <div class="deal-actions">
+          <button class="btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <button class="btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab is-active">
+        Overview
+      </button>
+      <button class="tab" disabled>
+        Buyers <span class="badge muted">Phase 3</span>
+      </button>
+      <button class="tab" disabled>
+        DD Q&amp;A <span class="badge muted">Phase 4</span>
+      </button>
+    </div>
+
+    <!-- Overview content -->
+    <div class="overview">
+
+      <!-- LEFT COLUMN -->
+      <div>
+        <!-- Stage stepper -->
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Deal stage</h2>
+            <div class="section-meta">Step 2 of 5 · entered marketing on May 14</div>
+          </div>
+
+          <div class="stepper">
+            <div class="stepper-track"></div>
+            <div class="stepper-track-fill"></div>
+            <div class="stepper-steps">
+              <div class="step is-complete">
+                <div class="step-marker">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <div class="step-label">Preparation</div>
+                  <div class="step-sub">Feb 04 – May 13</div>
+                </div>
+              </div>
+              <div class="step is-current">
+                <div class="step-marker">2</div>
+                <div>
+                  <div class="step-label">Marketing</div>
+                  <div class="step-sub">Current</div>
+                </div>
+              </div>
+              <div class="step is-future">
+                <div class="step-marker">3</div>
+                <div>
+                  <div class="step-label">Bids</div>
+                  <div class="step-sub">Est. Jun 30</div>
+                </div>
+              </div>
+              <div class="step is-future">
+                <div class="step-marker">4</div>
+                <div>
+                  <div class="step-label">Diligence</div>
+                  <div class="step-sub">Est. Aug 15</div>
+                </div>
+              </div>
+              <div class="step is-future">
+                <div class="step-marker">5</div>
+                <div>
+                  <div class="step-label">Close</div>
+                  <div class="step-sub">Est. Q4</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-selector-row">
+            <span class="label">Update stage</span>
+            <select class="stage-select">
+              <option>Preparation</option>
+              <option selected>Marketing</option>
+              <option>Bids</option>
+              <option>Diligence</option>
+              <option>Close</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Milestones -->
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Milestones</h2>
+            <div class="section-meta">4 upcoming · 1 due in 5 days</div>
+          </div>
+
+          <div class="milestones">
+
+            <!-- Complete -->
+            <div class="milestone">
+              <div class="m-date"><span class="month">May</span> 14</div>
+              <div class="m-dot complete"></div>
+              <div class="m-content">
+                <div class="m-name is-complete">Teaser approved by management</div>
+                <div class="m-status complete">Complete</div>
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn danger" aria-label="Delete"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+            <!-- Complete -->
+            <div class="milestone">
+              <div class="m-date"><span class="month">May</span> 18</div>
+              <div class="m-dot complete"></div>
+              <div class="m-content">
+                <div class="m-name is-complete">CIM final draft circulated internally</div>
+                <div class="m-status complete">Complete</div>
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn danger" aria-label="Delete"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+            <!-- Due soon (teal accent — the section's one teal element) -->
+            <div class="milestone">
+              <div class="m-date"><span class="month">May</span> 26</div>
+              <div class="m-dot due-soon"></div>
+              <div class="m-content">
+                <div class="m-name">CIM distribution to Tier 1 buyers</div>
+                <div class="m-status due-soon">Due in 5 days</div>
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn danger" aria-label="Delete"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+            <!-- Inline edit demo -->
+            <div class="milestone is-editing">
+              <div class="m-date"><span class="month">Jun</span> 03</div>
+              <div class="m-dot upcoming"></div>
+              <div class="m-edit-row">
+                <input class="input name" value="IOI deadline — Tier 1 buyers" />
+                <input class="input date" type="text" value="2026-06-03" />
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Save"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+                <button class="icon-btn" aria-label="Cancel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+            </div>
+
+            <!-- Upcoming -->
+            <div class="milestone">
+              <div class="m-date"><span class="month">Jun</span> 16</div>
+              <div class="m-dot upcoming"></div>
+              <div class="m-content">
+                <div class="m-name">Management presentation rehearsal</div>
+                <div class="m-status upcoming">Upcoming</div>
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn danger" aria-label="Delete"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+            <!-- Upcoming -->
+            <div class="milestone">
+              <div class="m-date"><span class="month">Jun</span> 30</div>
+              <div class="m-dot upcoming"></div>
+              <div class="m-content">
+                <div class="m-name">Target IOI deadline (all parties)</div>
+                <div class="m-status upcoming">Upcoming</div>
+              </div>
+              <div class="m-actions">
+                <button class="icon-btn" aria-label="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn danger" aria-label="Delete"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+          </div>
+
+          <button class="add-milestone">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add milestone
+          </button>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN — Activity feed (empty state for Phase 2) -->
+      <div>
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Activity</h2>
+            <div class="section-meta">Live feed</div>
+          </div>
+
+          <div class="activity-empty">
+            <div class="activity-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9"/>
+                <polyline points="12 7 12 12 15 14"/>
+              </svg>
+            </div>
+            <h3>No activity yet</h3>
+            <p>Buyer outreach, communications, and diligence Q&amp;A events will appear here in chronological order as later phases come online.</p>
+
+            <div class="sources">
+              <div class="source-row">
+                <span class="dot"></span>
+                <span class="label">Buyer communications</span>
+                <span class="phase">Phase 3</span>
+              </div>
+              <div class="source-row">
+                <span class="dot"></span>
+                <span class="label">Q&amp;A log</span>
+                <span class="phase">Phase 4</span>
+              </div>
+              <div class="source-row">
+                <span class="dot"></span>
+                <span class="label">Buyer-list generation events</span>
+                <span class="phase">Phase 3</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <span>Project Atlas · BU-014 · Industrials</span>
+      <span>Read/write via OBO · Application Insights traced</span>
+    </div>
+  </div>
+</main>
+
+<script>
+  function switchView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('is-active', v.dataset.view === name));
+    document.querySelectorAll('.proto-banner .switch button').forEach(b => b.classList.toggle('is-active', b.dataset.view === name));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  document.querySelectorAll('.proto-banner .switch button').forEach(b => {
+    b.addEventListener('click', () => switchView(b.dataset.view));
+  });
+</script>
+
+</body>
+</html>

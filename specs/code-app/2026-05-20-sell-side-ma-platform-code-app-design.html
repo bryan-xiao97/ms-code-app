@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell-Side M&A Platform — Code App Technical Design Spec</title>
+  <style>
+    :root {
+      --color-black: #000000;
+      --color-white: #FFFFFF;
+      --color-navy-primary: #141B4D;
+      --color-navy-deep: #070263;
+      --color-navy-deepest: #2B0454;
+      --color-indigo: #4F4CB1;
+      --color-sky: #178AE0;
+      --color-cyan-light: #85D6F9;
+      --color-solomon-blue: #003594;
+      --color-teal: #2FD1B2;
+      --color-ice-blue: #E3F7FC;
+      --color-lavender: #EDEAFB;
+      --color-link: #0E04C7;
+      --color-link-visited: #003594;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      color: var(--color-black);
+      background: var(--color-white);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .page-header {
+      background: var(--color-navy-primary);
+      padding: 48px 64px 40px;
+    }
+    .page-header .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-cyan-light);
+      margin-bottom: 12px;
+    }
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--color-white);
+      margin: 0 0 16px;
+      line-height: 1.25;
+    }
+    .page-header .meta {
+      font-size: 13px;
+      color: var(--color-cyan-light);
+      opacity: 0.85;
+    }
+    .page-header .meta span {
+      margin-right: 24px;
+    }
+
+    /* Body container */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 64px 80px;
+    }
+
+    /* Context banner */
+    .context-banner {
+      background: var(--color-lavender);
+      border-left: 4px solid var(--color-indigo);
+      padding: 16px 20px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 48px;
+      font-size: 14px;
+      color: var(--color-navy-primary);
+    }
+    .context-banner strong {
+      color: var(--color-indigo);
+    }
+
+    /* Section headings */
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      border-left: 3px solid var(--color-sky);
+      padding-left: 14px;
+      margin: 52px 0 20px;
+    }
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 28px 0 10px;
+    }
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-indigo);
+      margin: 20px 0 8px;
+    }
+
+    p { margin: 0 0 14px; }
+
+    strong { color: var(--color-indigo); font-weight: 600; }
+
+    a { color: var(--color-link); }
+    a:visited { color: var(--color-link-visited); }
+
+    ul, ol {
+      padding-left: 20px;
+      margin: 0 0 14px;
+    }
+    li { margin-bottom: 6px; }
+
+    /* Code / diagram blocks */
+    pre {
+      background: #F4F6FA;
+      border: 1px solid #DDE3F0;
+      border-radius: 4px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--color-navy-primary);
+      margin: 16px 0 24px;
+    }
+    code {
+      font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+      font-size: 13px;
+      background: #F0F3FA;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--color-navy-deep);
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 16px 0 28px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead th {
+      background: var(--color-navy-primary);
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(even) { background: var(--color-ice-blue); }
+    tbody tr:nth-child(odd) { background: var(--color-white); }
+    tbody td {
+      padding: 9px 14px;
+      color: var(--color-black);
+      border-bottom: 1px solid #E8ECF5;
+      vertical-align: top;
+    }
+
+    /* Callout boxes */
+    .callout {
+      background: var(--color-ice-blue);
+      border-radius: 4px;
+      padding: 20px 24px;
+      margin: 20px 0 28px;
+      font-size: 14px;
+    }
+    .callout-alt {
+      background: var(--color-lavender);
+      border-radius: 4px;
+      padding: 20px 24px;
+      margin: 20px 0 28px;
+      font-size: 14px;
+    }
+    .callout h4, .callout-alt h4 {
+      margin-top: 0;
+    }
+
+    /* Agent flow cards */
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0 28px;
+    }
+    .flow-card {
+      background: var(--color-ice-blue);
+      border-radius: 4px;
+      padding: 20px;
+    }
+    .flow-card.alt { background: var(--color-lavender); }
+    .flow-card h4 {
+      margin-top: 0;
+      font-size: 13px;
+    }
+    .flow-card ol {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+    }
+    .flow-card li { margin-bottom: 5px; }
+
+    /* Phase list */
+    .phase-list { margin: 20px 0; }
+    .phase {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .phase-badge {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: var(--color-navy-primary);
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 13px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phase-content h4 {
+      margin: 6px 0 6px;
+    }
+    .phase-content ul {
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* Open questions */
+    .questions-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .questions-list li {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #E8ECF5;
+      font-size: 14px;
+      align-items: flex-start;
+    }
+    .questions-list li:last-child { border-bottom: none; }
+    .q-icon {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--color-sky);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    /* Comparison highlight */
+    .highlight-cell {
+      color: var(--color-indigo);
+      font-weight: 600;
+    }
+
+    /* Route table badge */
+    .method {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.3px;
+    }
+    .method-get { background: #E3F7FC; color: #0068B0; }
+    .method-post { background: #E8F5E9; color: #2E7D32; }
+    .method-patch { background: #FFF8E1; color: #F57F17; }
+    .method-delete { background: #FEECEC; color: #C62828; }
+
+    /* Footer */
+    .page-footer {
+      background: var(--color-navy-primary);
+      padding: 24px 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-footer p {
+      font-size: 12px;
+      color: var(--color-cyan-light);
+      opacity: 0.75;
+      margin: 0;
+    }
+    .teal-bar {
+      width: 40px;
+      height: 3px;
+      background: var(--color-teal);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="label">Technical Design Spec &nbsp;·&nbsp; Sell-Side M&A Platform</div>
+    <h1>Sell-Side M&A Platform<br>Code App Architecture</h1>
+    <div class="meta">
+      <span>Date: 2026-05-20</span>
+      <span>Author: Bryan Xiao</span>
+      <span>Status: Approved</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Context banner -->
+    <div class="context-banner">
+      <strong>Context:</strong> This spec describes the Code App implementation of the sell-side M&A platform. Feature design (deal pipeline, workspace, Buyers module, DD Q&A, Overview tab) is identical to the Canvas App spec dated 2026-05-19. This document covers the technical layer: React SPA, Azure Functions backend, Azure Static Web Apps hosting, and direct Dataverse / AI Foundry API integration.
+    </div>
+
+    <!-- Key Decisions -->
+    <h2>Key Decisions</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Decision</th><th>Resolution</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Implementation path</strong></td>
+            <td class="highlight-cell">Code App — Canvas App spec superseded</td>
+          </tr>
+          <tr>
+            <td><strong>Dataverse environment strategy</strong></td>
+            <td class="highlight-cell">Single shared environment — deal-level isolation via Dataverse Business Units</td>
+          </tr>
+          <tr>
+            <td><strong>Deal access control</strong></td>
+            <td class="highlight-cell">Dataverse Business Unit-based RLS — each deal maps to a Business Unit; Dataverse enforces row-level access via OBO flow</td>
+          </tr>
+          <tr>
+            <td><strong>Deal SharePoint site provisioning</strong></td>
+            <td class="highlight-cell">Manual at engagement start — automation deferred (may move to another platform)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Problem Statement -->
+    <h2>Problem Statement</h2>
+    <p>Solomon Partners' sell-side M&A workflow involves significant manual, repetitive work across buyer research, due diligence response, and buyer relationship tracking. This platform defines a code-first technical foundation supporting three AI-powered capabilities — <strong>Buyers (List Generation + Log)</strong>, <strong>DD Q&A Management</strong>, and <strong>Deal Project Management</strong> — while ensuring bankers retain ownership of judgment and direction.</p>
+    <p>The Code App approach is chosen over Power Apps Canvas to remove UI capability constraints on complex components (buyer table with inline editing, milestone timeline, activity feed) and to eliminate per-user Power Apps licensing requirements.</p>
+
+    <!-- Scope -->
+    <h2>Scope</h2>
+    <div class="flow-grid">
+      <div class="flow-card">
+        <h4>In Scope</h4>
+        <ul>
+          <li>React SPA front-end on Azure Static Web Apps</li>
+          <li>Azure Functions API backend (Node.js / TypeScript)</li>
+          <li>Authentication via MSAL (Azure AD) + managed identity</li>
+          <li>Dataverse Web API integration (via Functions backend)</li>
+          <li>Azure AI Foundry direct integration for DD Q&A</li>
+          <li>Power Automate integration for Buyer List generation and export</li>
+          <li>Background PA flows for Buyer Log monitoring — unchanged</li>
+          <li>Deal stage tracking and milestone timelines</li>
+          <li>Build sequencing and ALM</li>
+        </ul>
+      </div>
+      <div class="flow-card alt">
+        <h4>Out of Scope</h4>
+        <ul>
+          <li>Module-level feature specs (covered in individual PRDs)</li>
+          <li>DealCloud silver-layer semantic model design (Max / Idris)</li>
+          <li>VDR vendor evaluation or procurement</li>
+          <li>Teams app packaging or SPFx embedding (possible future extension)</li>
+          <li>M365 MCP, Fabric Data Agent architecture — unchanged from platform spec</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Platform Architecture -->
+    <h2>Platform Architecture</h2>
+
+    <h3>Application Stack</h3>
+    <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│  FRONT-END                                                      │
+│  React SPA (TypeScript)  ·  Azure Static Web Apps               │
+│  Auth: MSAL (Azure AD) — acquires token for Functions app       │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │  HTTPS + Azure AD bearer token
+┌───────────────────────────▼─────────────────────────────────────┐
+│  API BACKEND                                                    │
+│  Azure Functions (Node.js / TypeScript)                         │
+│  Managed Identity → Dataverse Web API (read/write)              │
+│  Managed Identity → Azure AI Foundry (DD Q&A RAG endpoint)      │
+│  HTTP call → Power Automate (Buyer List generation, export)     │
+└──────┬────────────────────┬────────────────────────┬────────────┘
+       │                    │                        │
+  Dataverse             Azure AI               Power Automate
+  Web API               Foundry                HTTP flows
+  (deals, buyers,       (RAG endpoint,         (Copilot Studio
+   milestones,           DD Q&A)                orchestrator,
+   QALog,                                       background Buyer
+   BuyerComms)                                  Log monitoring)
+</pre>
+
+    <h3>Data Connectivity Layer (Unchanged)</h3>
+    <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│  M365 MCP          Fabric Data Agent     Dataverse               │
+│  (read)            (read — DealCloud     (read/write)            │
+│                     via silver layer)                            │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  SharePoint  |  Outlook  |  Teams  |  DealCloud  |  VDR staging │
+└─────────────────────────────────────────────────────────────────┘
+</pre>
+
+    <!-- Shared environment & access control -->
+    <h2>Dataverse Environment &amp; Access Control</h2>
+    <p>All deals share a single Dataverse environment. Deal-level data isolation is enforced via <strong>Dataverse Business Units</strong> — each deal maps to one Business Unit. Bankers are assigned to their deal's Business Unit by a Dataverse administrator when they join the deal team. Dataverse enforces row-level access natively; a banker cannot read or write records outside their assigned Business Units.</p>
+
+    <div class="callout">
+      <h4>On-Behalf-Of (OBO) Flow</h4>
+      <p style="margin:0">The Functions app uses the Azure AD On-Behalf-Of flow to acquire a Dataverse token scoped to the authenticated user. Dataverse receives the user's identity and applies Business Unit-based RLS automatically — no deal-level filtering logic is required in the Functions app.</p>
+    </div>
+
+    <pre>
+React SPA (user: banker A)
+  → bearer token → Azure Functions
+  → OBO flow: exchange token for Dataverse-scoped token (as banker A)
+  → Dataverse Web API: enforces Business Unit RLS for banker A
+  → Returns only records in banker A's assigned deals
+</pre>
+
+    <p>When a deal is onboarded, a Dataverse administrator creates a Business Unit for the deal and assigns the relevant bankers. This is a manual admin step — no automated provisioning is required for v1.</p>
+
+    <!-- Auth -->
+    <h2>Authentication &amp; Authorization</h2>
+
+    <div class="callout">
+      <h4>Front-End (MSAL)</h4>
+      <p style="margin:0">The React SPA uses MSAL.js to authenticate bankers against Azure AD. On login, MSAL acquires an access token scoped to the Azure Functions app (<code>api://&lt;functions-app-client-id&gt;</code>). All API calls from the SPA include this token as a bearer token in the Authorization header.</p>
+    </div>
+
+    <div class="callout-alt">
+      <h4>Backend (Managed Identity)</h4>
+      <p style="margin:0">The Azure Functions app uses a system-assigned managed identity to authenticate outbound calls to Dataverse and Azure AI Foundry. No API keys or secrets are stored in application code or environment variables for these resources. The managed identity is granted the minimum required Dataverse security role (scoped to read/write on platform tables) and the Azure AI Foundry Inference role.</p>
+      <p style="margin:8px 0 0">Power Automate HTTP-triggered flows use a shared secret stored in <strong>Azure Key Vault</strong>, referenced via Functions app settings. The secret is never exposed to the front-end.</p>
+    </div>
+
+    <p>Each deal maps to a Dataverse Business Unit. Bankers are assigned to their deal's Business Unit by a Dataverse administrator when they join the deal team. The Functions app uses the OBO flow to call Dataverse as the authenticated user — Dataverse enforces Business Unit-scoped RLS automatically. The deal list returned to the SPA contains only deals the authenticated banker is assigned to.</p>
+
+    <!-- Front-End Structure -->
+    <h2>Front-End Structure</h2>
+    <p>The React SPA replicates the deal-centric UI from the Canvas App spec. The front-end holds no business logic beyond display and user interaction — all data operations route through <code>api.ts</code> → Azure Functions.</p>
+
+    <pre>
+src/
+  pages/
+    DealList.tsx          — home screen: deal pipeline list
+    DealWorkspace.tsx     — deal workspace shell (header + tabs)
+  components/
+    tabs/
+      Overview.tsx        — stage indicator, milestone timeline, activity feed
+      Buyers.tsx          — buyer table (uninitialized + active states)
+      DDQA.tsx            — question input + Q&A history
+    shared/
+      StageSelector.tsx   — deal stage dropdown (writes to /api/deals/{id})
+      MilestoneList.tsx   — milestone CRUD with inline editing
+      ActivityFeed.tsx    — merged event feed from /api/deals/{id}/activity
+      BuyerTable.tsx      — buyer rows with inline status/notes editing
+  services/
+    api.ts                — typed fetch wrapper (attaches bearer token, handles errors)
+  auth/
+    msalConfig.ts         — MSAL configuration (client ID, authority, scopes)
+</pre>
+
+    <!-- API Layer -->
+    <h2>Backend API Layer</h2>
+    <p>All endpoints are HTTP-triggered Azure Functions. The Functions app enforces Azure AD token validation on every request via Easy Auth or manual JWT validation middleware.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Method</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/api/deals</code></td>
+            <td><span class="method method-get">GET</span></td>
+            <td>List all deals from Dataverse</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals</code></td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Create deal record (name, target, sector, stage = Preparation)</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}</code></td>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td>Update deal stage</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/milestones</code></td>
+            <td><span class="method method-get">GET</span> <span class="method method-post">POST</span></td>
+            <td>List milestones; create milestone</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/milestones/{milestoneId}</code></td>
+            <td><span class="method method-patch">PATCH</span> <span class="method method-delete">DELETE</span></td>
+            <td>Update or delete a specific milestone</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/buyers</code></td>
+            <td><span class="method method-get">GET</span> <span class="method method-post">POST</span></td>
+            <td>List buyers; add manual buyer record</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/buyers/generate</code></td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Call PA flow → Copilot Studio orchestrator; write Buyers to Dataverse; return list</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/buyers/{buyerId}</code></td>
+            <td><span class="method method-patch">PATCH</span></td>
+            <td>Update buyer status, notes, next steps</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/qa</code></td>
+            <td><span class="method method-get">GET</span> <span class="method method-post">POST</span></td>
+            <td>List Q&A history; submit question → Foundry; write QALog record; return answer + citations</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/activity</code></td>
+            <td><span class="method method-get">GET</span></td>
+            <td>Merge BuyerCommunications + QALog + Buyers (generation event) sorted by timestamp</td>
+          </tr>
+          <tr>
+            <td><code>/api/deals/{id}/export</code></td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Trigger PA export flow; return SharePoint link or delivery confirmation</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <h4>Route Ordering Note</h4>
+      <p style="margin:0"><code>/api/deals/{id}/buyers/generate</code> must be registered before <code>/api/deals/{id}/buyers/{buyerId}</code> in the Functions route config. In practice, buyer IDs from Dataverse are GUIDs and will not collide with the string "generate" — but explicit ordering is the correct practice.</p>
+    </div>
+
+    <h3>Error Handling</h3>
+    <ul>
+      <li>Dataverse Web API errors (4xx, 5xx) are caught and returned as structured JSON <code>{ error: string, code: number }</code> to the front-end.</li>
+      <li>Foundry and PA flow errors return a <code>502</code> with a user-readable message displayed inline in the SPA.</li>
+      <li>All errors are logged to <strong>Application Insights</strong> via the Functions app.</li>
+    </ul>
+
+    <!-- Agent Integration -->
+    <h2>Agent Integration</h2>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <h4>Buyer List Generation — via Power Automate</h4>
+        <ol>
+          <li>SPA posts to <code>/api/deals/{id}/buyers/generate</code></li>
+          <li>Functions calls existing PA HTTP flow</li>
+          <li>PA flow calls Copilot Studio orchestrator + Research Agent (ADO Epic 4031 — already built)</li>
+          <li>Returns structured buyer list JSON</li>
+          <li>Functions writes Buyers records to Dataverse</li>
+          <li>Returns list to SPA</li>
+        </ol>
+      </div>
+      <div class="flow-card alt">
+        <h4>DD Q&A — direct to Azure AI Foundry</h4>
+        <ol>
+          <li>SPA posts question to <code>/api/deals/{id}/qa</code></li>
+          <li>Functions calls Foundry RAG endpoint (managed identity)</li>
+          <li>Foundry retrieves chunks from deal SharePoint site + M365</li>
+          <li>Returns answer + source citations</li>
+          <li>Functions writes QALog record to Dataverse</li>
+          <li>Returns answer + citations to SPA</li>
+        </ol>
+        <p style="font-size:12px;margin:8px 0 0;color:#555"><strong>Note:</strong> Deal SharePoint site is provisioned manually by the deal team at engagement start. Automation deferred — may move to another platform in a future phase.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h4>Buyer Log Auto-Recording — background Power Automate (unchanged)</h4>
+      <p style="margin:0">Background PA flows monitor Outlook and Teams for communications with tracked buyers, summarize threads via AI Builder, and write BuyerCommunications records to Dataverse. These flows run independently of the SPA and Functions app — triggered by Outlook/Teams events, not by user action. The Functions app surfaces their output via <code>/api/deals/{id}/buyers</code> and <code>/api/deals/{id}/activity</code>.</p>
+    </div>
+
+    <!-- Data Model -->
+    <h2>Data Model</h2>
+    <p>Identical to the Canvas App spec. No schema changes are required for the Code App.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Written By</th>
+            <th>Read By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Deals</strong></td>
+            <td>Functions (<code>/api/deals</code>)</td>
+            <td>All endpoints</td>
+          </tr>
+          <tr>
+            <td><strong>Milestones</strong></td>
+            <td>Functions (<code>/api/deals/{id}/milestones</code>)</td>
+            <td>Overview tab via milestones endpoint</td>
+          </tr>
+          <tr>
+            <td><strong>Buyers</strong></td>
+            <td>Functions (generate + manual add)</td>
+            <td>Buyers tab, activity feed</td>
+          </tr>
+          <tr>
+            <td><strong>BuyerCommunications</strong></td>
+            <td>Background PA flow (Buyer Log)</td>
+            <td>Buyers tab (last touch), activity feed</td>
+          </tr>
+          <tr>
+            <td><strong>QALog</strong></td>
+            <td>Functions (<code>/api/deals/{id}/qa</code>)</td>
+            <td>DD Q&A tab, activity feed</td>
+          </tr>
+          <tr>
+            <td><strong>MeetingSummaries</strong></td>
+            <td>Meeting capture workflow</td>
+            <td>Copilot agents (existing)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The Functions app accesses Dataverse via the Web API using managed identity auth. All reads use OData queries filtered by deal ID. The front-end never calls Dataverse directly.</p>
+
+    <!-- Build Sequencing -->
+    <h2>Build Sequencing &amp; ALM</h2>
+
+    <h3>Repository Structure</h3>
+    <pre>
+/
+  frontend/         — React SPA (TypeScript, Vite)
+  backend/          — Azure Functions app (Node.js / TypeScript)
+  infra/            — Bicep templates (Static Web Apps, Functions, Key Vault)
+  .azure-pipelines/ — Azure DevOps pipeline YAML
+</pre>
+
+    <h3>CI/CD (Azure DevOps)</h3>
+    <ul>
+      <li><strong>PR gate:</strong> lint + type-check + unit tests on both frontend and backend</li>
+      <li><strong>Main branch merge:</strong> build SPA → deploy to Azure Static Web Apps; build Functions → deploy to Functions app</li>
+      <li><strong>Infrastructure changes:</strong> Bicep deployment gated on manual approval</li>
+    </ul>
+
+    <h3>Phases</h3>
+    <div class="phase-list">
+      <div class="phase">
+        <div class="phase-badge">1</div>
+        <div class="phase-content">
+          <h4>Infrastructure &amp; Auth</h4>
+          <ul>
+            <li>Provision Azure Static Web Apps, Functions app, Key Vault</li>
+            <li>Configure managed identity roles (Dataverse, AI Foundry)</li>
+            <li>Configure MSAL app registration in Azure AD</li>
+            <li>Dataverse schema: Deals (Stage), Milestones, Buyers, BuyerCommunications, QALog</li>
+            <li>Azure DevOps pipeline: lint / type-check / deploy gates</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">2</div>
+        <div class="phase-content">
+          <h4>Deal PM Shell</h4>
+          <ul>
+            <li>Frontend: DealList, DealWorkspace shell, StageSelector</li>
+            <li>Backend: <code>/api/deals</code> (GET, POST, PATCH), <code>/api/deals/{id}/milestones</code> (all)</li>
+            <li>Frontend: Overview tab — stage indicator, milestone CRUD</li>
+            <li>Activity feed renders empty until modules populate data</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">3</div>
+        <div class="phase-content">
+          <h4>Buyers Module</h4>
+          <ul>
+            <li>Backend: buyers endpoints (GET, POST, generate, PATCH), export</li>
+            <li>Frontend: Buyers tab (uninitialized + active states, inline editing, overdue indicators)</li>
+            <li>Background PA flows: Outlook/Teams monitoring → BuyerCommunications</li>
+            <li>Activity feed: BuyerCommunications + Buyers generation event</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">4</div>
+        <div class="phase-content">
+          <h4>DD Q&A</h4>
+          <ul>
+            <li>Azure AI Foundry index over deal SharePoint site</li>
+            <li>Backend: <code>/api/deals/{id}/qa</code> (GET, POST → Foundry)</li>
+            <li>Frontend: DD Q&A tab (question input, Q&A history, export)</li>
+            <li>Activity feed: QALog events added</li>
+            <li><em>Depends on VDR staging pattern being operationalized</em></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <h2>Canvas App vs. Code App</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>Canvas App</th>
+            <th>Code App</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>UI framework</strong></td>
+            <td>Power Fx / Studio</td>
+            <td class="highlight-cell">React / TypeScript</td>
+          </tr>
+          <tr>
+            <td><strong>Hosting</strong></td>
+            <td>Power Platform</td>
+            <td class="highlight-cell">Azure Static Web Apps</td>
+          </tr>
+          <tr>
+            <td><strong>Backend</strong></td>
+            <td>Power Automate (all calls)</td>
+            <td class="highlight-cell">Azure Functions + PA (hybrid)</td>
+          </tr>
+          <tr>
+            <td><strong>Auth</strong></td>
+            <td>Inherited from Power Platform</td>
+            <td class="highlight-cell">MSAL + managed identity</td>
+          </tr>
+          <tr>
+            <td><strong>Dataverse access</strong></td>
+            <td>Native connector</td>
+            <td class="highlight-cell">Web API via Functions</td>
+          </tr>
+          <tr>
+            <td><strong>Licensing</strong></td>
+            <td>Power Apps per-user or per-app required</td>
+            <td class="highlight-cell">No Power Apps license; PA for background flows only</td>
+          </tr>
+          <tr>
+            <td><strong>UI capability</strong></td>
+            <td>Constrained (gallery, forms)</td>
+            <td class="highlight-cell">No ceiling</td>
+          </tr>
+          <tr>
+            <td><strong>ALM</strong></td>
+            <td>Power Platform solution + pac CLI</td>
+            <td class="highlight-cell">Azure DevOps CI/CD + Bicep</td>
+          </tr>
+          <tr>
+            <td><strong>Build complexity</strong></td>
+            <td class="highlight-cell">Lower</td>
+            <td>Higher (infra + code)</td>
+          </tr>
+          <tr>
+            <td><strong>M365/Teams integration</strong></td>
+            <td class="highlight-cell">Native</td>
+            <td>Manual (Teams manifest if needed later)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Integration Points -->
+    <h2>Integration Points</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>Direction</th>
+            <th>Used By</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Azure AD / MSAL</strong></td>
+            <td>Auth</td>
+            <td>Front-end → Functions</td>
+            <td>Token-based; no session cookies</td>
+          </tr>
+          <tr>
+            <td><strong>Dataverse Web API</strong></td>
+            <td>Read/Write</td>
+            <td>Functions backend</td>
+            <td>Via managed identity; OData queries</td>
+          </tr>
+          <tr>
+            <td><strong>Azure AI Foundry</strong></td>
+            <td>Read</td>
+            <td>Functions backend (DD Q&A)</td>
+            <td>Direct REST; managed identity</td>
+          </tr>
+          <tr>
+            <td><strong>Power Automate HTTP flows</strong></td>
+            <td>Read</td>
+            <td>Functions backend</td>
+            <td>Buyer List gen + export; shared secret in Key Vault</td>
+          </tr>
+          <tr>
+            <td><strong>M365 MCP</strong></td>
+            <td>Read</td>
+            <td>PA flows, Copilot Studio</td>
+            <td>Unchanged from Canvas spec</td>
+          </tr>
+          <tr>
+            <td><strong>Fabric Data Agent</strong></td>
+            <td>Read</td>
+            <td>Copilot Studio (via PA flow)</td>
+            <td>DealCloud; RLS enforced; owned by Max/Idris</td>
+          </tr>
+          <tr>
+            <td><strong>AI Builder</strong></td>
+            <td>Read</td>
+            <td>Background PA flow (Buyer Log)</td>
+            <td>Summarizes Outlook/Teams threads</td>
+          </tr>
+          <tr>
+            <td><strong>Application Insights</strong></td>
+            <td>Write</td>
+            <td>Functions backend</td>
+            <td>Error logging, request tracing</td>
+          </tr>
+          <tr>
+            <td><strong>Azure Key Vault</strong></td>
+            <td>Read</td>
+            <td>Functions backend</td>
+            <td>PA flow shared secret</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Open Questions -->
+    <h2>Open Questions</h2>
+    <ul class="questions-list">
+      <li>
+        <div class="q-icon">→</div>
+        <span><strong>VDR staging automation (deferred):</strong> A within-hours SLA makes manual staging insufficient for steady-state use. Automation is deferred — deals use different VDR platforms. Target vendors: <strong>Intralinks</strong>, <strong>Datasite</strong>, and <strong>Ansarada</strong> all have REST APIs supporting programmatic document retrieval. Target pattern: scheduled Power Automate flow or Azure Function polling VDR API → sync new documents to deal SharePoint site. Vendor coverage and API consistency need evaluation before implementation.</span>
+      </li>
+      <li>
+        <div class="q-icon">→</div>
+        <span><strong>Activity feed limit:</strong> 10 most recent events. Fixed platform-wide.</span>
+      </li>
+      <li>
+        <div class="q-icon">→</div>
+        <span><strong>Status thresholds (fixed platform-wide):</strong> Milestone Due Soon = 5 days before due date; Buyer follow-up overdue = 14 days since last touch.</span>
+      </li>
+    </ul>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="page-footer">
+    <p>Solomon Partners &nbsp;·&nbsp; Sell-Side M&A Platform &nbsp;·&nbsp; Technical Design Spec &nbsp;·&nbsp; 2026-05-20</p>
+    <div class="teal-bar"></div>
+  </div>
+
+</body>
+</html>

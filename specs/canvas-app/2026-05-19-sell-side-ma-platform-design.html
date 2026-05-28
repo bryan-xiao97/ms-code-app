@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sell-Side M&A Platform — Technical Design Spec</title>
+  <style>
+    :root {
+      --color-black: #000000;
+      --color-white: #FFFFFF;
+      --color-navy-primary: #141B4D;
+      --color-navy-deep: #070263;
+      --color-navy-deepest: #2B0454;
+      --color-indigo: #4F4CB1;
+      --color-sky: #178AE0;
+      --color-cyan-light: #85D6F9;
+      --color-solomon-blue: #003594;
+      --color-teal: #2FD1B2;
+      --color-ice-blue: #E3F7FC;
+      --color-lavender: #EDEAFB;
+      --color-link: #0E04C7;
+      --color-link-visited: #003594;
+      --color-rule: #EBEBEB;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      color: var(--color-black);
+      background: var(--color-white);
+      margin: 0;
+      padding: 0;
+      line-height: 1.55;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 56px 80px;
+    }
+
+    /* Header */
+    .doc-header {
+      border-bottom: 1px solid var(--color-rule);
+      padding-bottom: 28px;
+      margin-bottom: 40px;
+    }
+    .doc-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--color-indigo);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin: 0 0 16px;
+      line-height: 1.2;
+    }
+    .doc-meta {
+      font-size: 13px;
+      color: var(--color-navy-primary);
+      opacity: 0.75;
+    }
+    .doc-meta span + span::before {
+      content: "  •  ";
+      opacity: 0.4;
+    }
+
+    /* Section titles with vertical accent bar */
+    h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      border-left: 3px solid var(--color-sky);
+      padding-left: 14px;
+      margin: 56px 0 20px;
+      line-height: 1.25;
+    }
+    h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 32px 0 12px;
+    }
+    h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin: 20px 0 8px;
+    }
+
+    p { margin: 0 0 14px; }
+    strong { color: var(--color-indigo); font-weight: 600; }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+
+    /* Scope grid */
+    .scope-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0 8px;
+    }
+    .scope-card {
+      padding: 22px 24px;
+      border-radius: 4px;
+    }
+    .scope-card.in   { background: var(--color-ice-blue); }
+    .scope-card.out  { background: var(--color-lavender); }
+    .scope-card h4 {
+      margin: 0 0 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-navy-deep);
+    }
+    .scope-card ul { margin: 0; padding-left: 18px; }
+
+    /* Architecture stack */
+    .arch-stack {
+      margin: 18px 0 8px;
+    }
+    .arch-layer {
+      border-radius: 4px;
+      padding: 20px 24px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .arch-layer .layer-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--color-navy-deep);
+      margin-bottom: 8px;
+    }
+    .arch-layer .layer-sub {
+      font-size: 12px;
+      color: var(--color-indigo);
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .arch-layer.app  { background: var(--color-lavender); }
+    .arch-layer.data { background: var(--color-ice-blue); }
+    .arch-layer.src  { background: #F4F7FA; }
+    .arch-cells {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .arch-cells.four { grid-template-columns: repeat(5, 1fr); }
+    .arch-cell {
+      background: var(--color-white);
+      border: 1px solid #D8E6EF;
+      border-radius: 3px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+    }
+    .arch-cell .role {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-indigo);
+      margin-top: 4px;
+    }
+    .arch-arrow {
+      text-align: center;
+      color: var(--color-sky);
+      font-size: 18px;
+      margin: -2px 0 -2px;
+      line-height: 1;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 8px;
+      font-size: 14px;
+    }
+    th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--color-white);
+      background: var(--color-navy-primary);
+      padding: 10px 12px;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-rule);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #FAFBFD; }
+
+    /* VDR staging */
+    .vdr-flow {
+      background: var(--color-ice-blue);
+      border-radius: 4px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .vdr-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 0;
+    }
+    .vdr-box {
+      background: var(--color-white);
+      border: 1px solid #BFD9EA;
+      border-radius: 3px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      min-width: 220px;
+    }
+    .vdr-arrow {
+      color: var(--color-sky);
+      font-size: 18px;
+    }
+    .vdr-note {
+      font-size: 12px;
+      color: var(--color-indigo);
+      font-style: italic;
+      margin-left: 12px;
+    }
+
+    /* Front-end fan-out */
+    .frontend-diagram {
+      background: var(--color-lavender);
+      border-radius: 4px;
+      padding: 22px 24px;
+      margin: 18px 0;
+    }
+    .frontend-app {
+      background: var(--color-white);
+      border-radius: 4px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    .frontend-app-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-navy-deep);
+      margin-bottom: 10px;
+    }
+    .frontend-screens {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .frontend-screen {
+      background: var(--color-ice-blue);
+      border-radius: 3px;
+      padding: 14px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+    }
+    .frontend-arrows {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+      color: var(--color-sky);
+      font-size: 18px;
+      margin: 6px 0 6px;
+    }
+    .frontend-backends {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .frontend-backend {
+      background: var(--color-white);
+      border: 1px solid #D2C9F0;
+      border-radius: 3px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--color-navy-primary);
+      text-align: center;
+    }
+    .frontend-backend strong { display: block; margin-bottom: 4px; color: var(--color-indigo); font-size: 13px; }
+
+    /* Data flow lists */
+    .flow {
+      background: var(--color-ice-blue);
+      border-left: 3px solid var(--color-sky);
+      border-radius: 0 4px 4px 0;
+      padding: 18px 24px 18px 28px;
+      margin: 12px 0 20px;
+    }
+    .flow.alt {
+      background: var(--color-lavender);
+      border-left-color: var(--color-indigo);
+    }
+    .flow ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+    .flow ol li {
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--color-navy-primary);
+    }
+    .flow .flow-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-indigo);
+      margin-bottom: 10px;
+    }
+    .flow .sub-flow {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-indigo);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 10px 0 6px;
+    }
+
+    /* Phase / sequencing */
+    .phases {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .phase {
+      background: var(--color-white);
+      border-top: 3px solid var(--color-sky);
+      border-radius: 0 0 4px 4px;
+      padding: 16px 16px 18px;
+      box-shadow: 0 0 0 1px var(--color-rule);
+    }
+    .phase.highlight {
+      border-top-color: var(--color-teal);
+    }
+    .phase .phase-num {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-indigo);
+      margin-bottom: 4px;
+    }
+    .phase .phase-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin-bottom: 4px;
+    }
+    .phase .phase-status {
+      font-size: 11px;
+      font-style: italic;
+      color: var(--color-navy-deep);
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+    .phase ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    .phase ul li { margin-bottom: 4px; }
+
+    /* Open questions */
+    .questions {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0 0;
+    }
+    .questions li {
+      background: var(--color-lavender);
+      border-radius: 4px;
+      padding: 14px 18px 14px 42px;
+      margin-bottom: 10px;
+      position: relative;
+      font-size: 14px;
+      color: var(--color-navy-primary);
+    }
+    .questions li::before {
+      content: "?";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-indigo);
+      color: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Footer */
+    .doc-footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-rule);
+      font-size: 12px;
+      color: var(--color-navy-primary);
+      opacity: 0.6;
+    }
+
+    @media print {
+      body { font-size: 12px; }
+      .page { padding: 24px; max-width: none; }
+      h2 { margin-top: 28px; }
+      .phase, .arch-layer, .flow, .scope-card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="doc-header">
+      <div class="doc-eyebrow">Technical Design Spec</div>
+      <h1>Sell-Side M&amp;A Platform</h1>
+      <div class="doc-meta">
+        <span>Date: 2026-05-19</span><span>Author: Bryan Xiao</span><span>Status: Platform-level design</span>
+      </div>
+    </header>
+
+    <h2>Problem Statement</h2>
+    <p>Solomon Partners' sell-side M&amp;A workflow involves significant manual, repetitive work across buyer research, due diligence response, and buyer relationship tracking. This platform design defines a <strong>shared technical foundation</strong> that supports three AI-powered modules — Buyer's List Creation, DD Q&amp;A Management, and Buyer Log Automation — while ensuring bankers retain ownership of judgment and direction.</p>
+
+    <h2>Scope</h2>
+    <p>This document is a <strong>platform-level technical design</strong> spanning all three modules. Each module has (or will have) its own product spec and work items. This spec defines the shared infrastructure, cross-module data flows, and build sequencing.</p>
+
+    <div class="scope-grid">
+      <div class="scope-card in">
+        <h4>In Scope</h4>
+        <ul>
+          <li>Shared data connectivity layer (M365 MCP, Fabric/Dataverse, VDR staging)</li>
+          <li>Per-module agent/app layer decisions</li>
+          <li>Cross-module data flows incl. Buyer's List → Buyer Log handoff</li>
+          <li>Integration points and build sequencing</li>
+        </ul>
+      </div>
+      <div class="scope-card out">
+        <h4>Out of Scope</h4>
+        <ul>
+          <li>Module-level feature specs (covered in individual PRDs)</li>
+          <li>DealCloud silver-layer semantic model design (owned by Max / Idris)</li>
+          <li>VDR vendor evaluation or procurement</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Platform Architecture</h2>
+    <p>The platform has <strong>two stable layers</strong> and <strong>one flexible layer</strong>.</p>
+
+    <div class="arch-stack">
+      <div class="arch-layer app">
+        <div class="layer-label">Agent / App Layer</div>
+        <div class="layer-sub">Flexible — varies by module · Power Apps Canvas App (unified front-end)</div>
+        <div class="arch-cells">
+          <div class="arch-cell">Copilot Studio<span class="role">Buyer's List</span></div>
+          <div class="arch-cell">Azure AI Foundry<span class="role">DD Q&amp;A (RAG)</span></div>
+          <div class="arch-cell">Power Automate<span class="role">Buyer Log + glue</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-layer data">
+        <div class="layer-label">Data Connectivity Layer</div>
+        <div class="layer-sub">Shared platform</div>
+        <div class="arch-cells">
+          <div class="arch-cell">M365 MCP<span class="role">read</span></div>
+          <div class="arch-cell">Fabric Data Agent<span class="role">read — DealCloud via silver layer</span></div>
+          <div class="arch-cell">Dataverse<span class="role">read / write</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-layer src">
+        <div class="layer-label">Data Sources</div>
+        <div class="arch-cells four">
+          <div class="arch-cell">SharePoint</div>
+          <div class="arch-cell">Outlook</div>
+          <div class="arch-cell">Teams</div>
+          <div class="arch-cell">DealCloud</div>
+          <div class="arch-cell">VDR staging</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Module Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Agent / App Layer</th>
+          <th>Primary Data Read</th>
+          <th>Primary Data Write</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Buyer's List</strong></td>
+          <td>Copilot Studio (existing)</td>
+          <td>M365 MCP, Fabric / DealCloud</td>
+          <td>Dataverse (buyer records), Excel / Word export</td>
+        </tr>
+        <tr>
+          <td><strong>DD Q&amp;A</strong></td>
+          <td>Azure AI Foundry + Power Automate</td>
+          <td>M365 MCP (incl. VDR staging site), Dataverse</td>
+          <td>Dataverse (Q&amp;A log)</td>
+        </tr>
+        <tr>
+          <td><strong>Buyer Log</strong></td>
+          <td>Power Automate + Power Apps</td>
+          <td>M365 MCP (Outlook, Teams), Dataverse</td>
+          <td>Dataverse (log records)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Data Connectivity Layer</h2>
+
+    <h3>M365 MCP (read)</h3>
+    <p>Single shared connector providing all modules with read access to SharePoint, Outlook, and Teams. The VDR integration runs through this layer via a deal-specific SharePoint staging site.</p>
+
+    <h4>VDR staging pattern</h4>
+    <div class="vdr-flow">
+      <div class="vdr-step">
+        <div class="vdr-box">VDR (Intralinks / Ansarada / Datasite)</div>
+        <span class="vdr-note">deal team stages relevant docs at engagement start — manual initially; PA automation if VDR API allows</span>
+      </div>
+      <div class="vdr-step"><span class="vdr-arrow">▼</span></div>
+      <div class="vdr-step">
+        <div class="vdr-box">Deal SharePoint Site</div>
+        <span class="vdr-arrow">►</span>
+        <div class="vdr-box">M365 MCP</div>
+        <span class="vdr-arrow">►</span>
+        <div class="vdr-box">DD Q&amp;A Agent</div>
+      </div>
+      <p style="margin: 12px 0 0; font-size: 13px; color: var(--color-navy-primary);">
+        The staging site <strong>mirrors the VDR folder structure</strong> so document citations in agent responses map back to VDR source paths.
+      </p>
+    </div>
+
+    <h3>Fabric Data Agent / Silver Layer (read)</h3>
+    <p>Shared connected agent sitting over the DealCloud silver-layer semantic model (Max / Idris). All modules requiring DealCloud data call this agent — no module connects to DealCloud directly. <strong>RLS is enforced at the semantic model level</strong>, ensuring consistent access control regardless of which module is calling.</p>
+
+    <h3>Dataverse (read/write)</h3>
+    <p>The operational data store for the platform. Core tables:</p>
+    <table>
+      <thead>
+        <tr><th>Table</th><th>Written By</th><th>Read By</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Deals</strong></td><td>Manual / Power Apps</td><td>All modules</td></tr>
+        <tr><td><strong>Buyers</strong></td><td>Buyer's List (via PA flow)</td><td>Buyer Log, DD Q&amp;A</td></tr>
+        <tr><td><strong>BuyerCommunications</strong></td><td>Buyer Log (PA auto-recording)</td><td>Buyer Log (Power Apps)</td></tr>
+        <tr><td><strong>QALog</strong></td><td>DD Q&amp;A (via PA flow)</td><td>DD Q&amp;A (Power Apps)</td></tr>
+        <tr><td><strong>MeetingSummaries</strong></td><td>Meeting capture workflow</td><td>Copilot agents (existing)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Agent / App Layer</h2>
+
+    <h3>Unified Front-End: Power Apps Canvas App</h3>
+    <p>A single Power Apps canvas app is the deal-team interface for all three modules. Each module is a screen within the app. <strong>Agents and automation run as backend action providers</strong> — bankers interact with a structured app UI, not a chat window. Copilot Studio and Azure AI Foundry are execution environments only; they have no user-facing interface.</p>
+
+    <div class="frontend-diagram">
+      <div class="frontend-app">
+        <div class="frontend-app-label">Power Apps Canvas App</div>
+        <div class="frontend-screens">
+          <div class="frontend-screen">Buyer's List</div>
+          <div class="frontend-screen">DD Q&amp;A</div>
+          <div class="frontend-screen">Buyer Log</div>
+        </div>
+      </div>
+      <div class="frontend-arrows">
+        <div>▼</div><div>▼</div><div>▼</div>
+      </div>
+      <div class="frontend-backends">
+        <div class="frontend-backend"><strong>Copilot Studio</strong>Agent — via PA flow or HTTP</div>
+        <div class="frontend-backend"><strong>Azure AI Foundry</strong>RAG — via PA flow or HTTP</div>
+        <div class="frontend-backend"><strong>Power Automate</strong>flows + Dataverse direct connector</div>
+      </div>
+    </div>
+
+    <h3>Per-Module Backend</h3>
+
+    <h4>Buyer's List — Copilot Studio (existing)</h4>
+    <p>Orchestrator + Research Agent pattern already built and in deployment (<strong>ADO Epic 4031</strong>). The platform view adds a Dataverse write step to the existing output flow and a Power Apps screen for display and export trigger.</p>
+
+    <h4>DD Q&amp;A — Azure AI Foundry</h4>
+    <p>RAG over a large heterogeneous document corpus (VDR staged documents, client emails, meeting notes, prior DD materials). <strong>Copilot Studio's M365 MCP search is insufficient</strong> for large-corpus retrieval where precise chunk retrieval and reranking matter. Azure AI Foundry indexes the deal SharePoint site and M365 content; Power Automate calls the Foundry endpoint and writes Q&amp;A records to Dataverse.</p>
+
+    <h4>Buyer Log — Power Automate + Power Apps</h4>
+    <p>Two components:</p>
+    <ul>
+      <li><strong>Power Automate (background auto-recording):</strong> monitors Outlook and Teams for communications with tracked buyers; AI Builder summarizes threads; writes communication event records to Dataverse.</li>
+      <li><strong>Power Apps (foreground banker UI):</strong> displays buyer log per deal (contact, firm, status, last touch, next steps); bankers update status and notes; surfaces overdue follow-ups past a defined contact threshold.</li>
+    </ul>
+
+    <h2>Data Flows</h2>
+
+    <div class="flow">
+      <div class="flow-label">Buyer's List</div>
+      <ol>
+        <li>Banker inputs deal context in Power Apps (target company, buyer criteria)</li>
+        <li>Power Apps triggers Power Automate flow</li>
+        <li>Flow calls Copilot Studio orchestrator</li>
+        <li>Research agent iterates: M365 MCP (emails, SharePoint, Teams) · Fabric Data Agent (DealCloud history, RLS enforced) · Web search (external candidates)</li>
+        <li>Orchestrator returns structured buyer list JSON</li>
+        <li>Flow writes buyer records to Dataverse (one per buyer, status = <em>Identified / Not Contacted</em>, linked to deal ID)</li>
+        <li>Flow returns result to Power Apps → displayed as structured table</li>
+        <li>Banker triggers export → Power Automate generates Excel / Word → delivered via SharePoint or email</li>
+      </ol>
+    </div>
+
+    <div class="flow alt">
+      <div class="flow-label">DD Q&amp;A</div>
+      <ol>
+        <li>Banker selects deal in Power Apps → types due diligence question</li>
+        <li>Power Apps triggers Power Automate flow</li>
+        <li>Flow calls Azure AI Foundry RAG engine: retrieves chunks from deal SharePoint site (VDR + client files) · retrieves chunks from M365 (emails, meeting notes, Teams) · optionally queries Dataverse for DealCloud context</li>
+        <li>Foundry synthesizes answer + source citations</li>
+        <li>Flow writes Q&amp;A record to Dataverse (question, answer, citations, banker, timestamp)</li>
+        <li>Flow returns answer + citations to Power Apps → displayed in-app</li>
+      </ol>
+    </div>
+
+    <div class="flow">
+      <div class="flow-label">Buyer Log</div>
+      <div class="sub-flow">Background — automated</div>
+      <ol>
+        <li>Power Automate monitors Outlook + Teams for communications with tracked buyers</li>
+        <li>On trigger: AI Builder summarizes thread</li>
+        <li>Writes communication event record to Dataverse (buyer ID, date, direction, summary, banker)</li>
+      </ol>
+      <div class="sub-flow">Foreground — banker-driven</div>
+      <ol start="4">
+        <li>Banker opens Power Apps → views buyer log for deal</li>
+        <li>Banker updates status, adds notes, sets next steps → writes to Dataverse</li>
+        <li>Power Apps surfaces overdue follow-ups (no contact past defined threshold)</li>
+      </ol>
+    </div>
+
+    <h3>Cross-Module: Buyer's List → Buyer Log Handoff</h3>
+    <p>The Buyer Log is <strong>seeded from the Buyer's List output</strong>. When the Buyer's List flow writes buyer records to Dataverse (step 6 above), those records become the initial buyer universe for the Buyer Log. As communications are auto-recorded, they attach to the buyer records already in Dataverse. Bankers can also add buyers manually to the log for buyers not surfaced by the agent.</p>
+
+    <h2>Integration Points</h2>
+    <table>
+      <thead>
+        <tr><th>System</th><th>Direction</th><th>Used By</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>M365 MCP</strong></td><td>Read</td><td>All modules</td><td>SharePoint, Outlook, Teams; single shared connector</td></tr>
+        <tr><td><strong>Fabric Data Agent / Silver Layer</strong></td><td>Read</td><td>Buyer's List, DD Q&amp;A</td><td>DealCloud via semantic model; RLS enforced; owned by Max / Idris</td></tr>
+        <tr><td><strong>Dataverse</strong></td><td>Read / Write</td><td>All modules</td><td>Buyer records, Q&amp;A log, communication events, buyer log</td></tr>
+        <tr><td><strong>Azure AI Foundry</strong></td><td>Read</td><td>DD Q&amp;A</td><td>RAG engine; called via Power Automate or HTTP connector</td></tr>
+        <tr><td><strong>Copilot Studio</strong></td><td>Execution</td><td>Buyer's List</td><td>Orchestrator + research agents; called via Power Automate or HTTP</td></tr>
+        <tr><td><strong>VDR (Intralinks / Ansarada / Datasite)</strong></td><td>Staged</td><td>DD Q&amp;A</td><td>Deal teams export relevant docs to deal SharePoint site at engagement start</td></tr>
+        <tr><td><strong>AI Builder</strong></td><td>Read</td><td>Buyer Log</td><td>Summarizes Outlook / Teams threads before writing to Dataverse</td></tr>
+        <tr><td><strong>Office (Excel / Word)</strong></td><td>Write</td><td>Buyer's List</td><td>Export output generated by Power Automate</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Build Sequencing</h2>
+    <p>The data connectivity layer must be established <strong>before any module goes to production</strong>.</p>
+
+    <div class="phases">
+      <div class="phase highlight">
+        <div class="phase-num">Phase 1</div>
+        <div class="phase-title">Shared Platform</div>
+        <div class="phase-status">Prerequisite for all modules</div>
+        <ul>
+          <li>Dataverse schema: deals, buyers, Q&amp;A log, communication events</li>
+          <li>M365 MCP connector configured and validated</li>
+          <li>Fabric Data Agent / silver layer (in progress — Max / Idris)</li>
+          <li>Deal SharePoint site template (VDR staging folder structure)</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Phase 2</div>
+        <div class="phase-title">Buyer's List</div>
+        <div class="phase-status">In progress — ADO Epic 4031</div>
+        <ul>
+          <li>Add Dataverse write step to existing orchestrator output flow</li>
+          <li>Power Apps screen: buyer list display + export trigger</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Phase 3</div>
+        <div class="phase-title">Buyer Log</div>
+        <div class="phase-status">Reads from Phase 2 output</div>
+        <ul>
+          <li>Power Automate flows: Outlook / Teams auto-recording → Dataverse</li>
+          <li>Power Apps screen: log display, status / notes editing, overdue alerts</li>
+          <li>Reads from Dataverse buyer records seeded by Buyer's List</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Phase 4</div>
+        <div class="phase-title">DD Q&amp;A</div>
+        <div class="phase-status">Depends on VDR staging + Foundry indexing</div>
+        <ul>
+          <li>Azure AI Foundry index over deal SharePoint site</li>
+          <li>Power Automate flow: call Foundry → write Q&amp;A log to Dataverse</li>
+          <li>Power Apps screen: Q&amp;A interface + citation display</li>
+        </ul>
+      </div>
+    </div>
+    <p style="font-size: 13px; color: var(--color-navy-primary); opacity: 0.85;">DD Q&amp;A is Phase 4 because it depends on the VDR staging pattern being operationalized and Azure AI Foundry indexing being stood up — both have more unknowns than Buyer Log.</p>
+
+    <h2>Open Questions</h2>
+    <ul class="questions">
+      <li>What is the <strong>Dataverse environment strategy</strong> — shared environment for all deals, or per-deal environments? Affects RLS design and data isolation.</li>
+      <li>How is the <strong>deal SharePoint site provisioned</strong> — manually per engagement, or automated via Power Automate on deal creation?</li>
+      <li>What is the <strong>VDR staging SLA</strong> — how quickly must documents appear in the deal SharePoint site after being uploaded to the VDR? Does this need automation or is manual staging acceptable for the pilot?</li>
+      <li>Does the Power Apps canvas app require <strong>row-level security</strong> to scope deal data per banker, or do all deal-team members see all deals?</li>
+      <li>Which <strong>VDR vendor(s)</strong> are in use at Solomon Partners today? Determines whether VDR staging automation is feasible (API availability varies by vendor).</li>
+    </ul>
+
+    <div class="doc-footer">
+      Solomon Partners · Sell-Side M&amp;A Platform Technical Design Spec · 2026-05-19
+    </div>
+
+  </div>
+</body>
+</html>

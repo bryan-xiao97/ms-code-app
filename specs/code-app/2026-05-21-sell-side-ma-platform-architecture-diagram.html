@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell-Side M&A Platform — Code App Architecture Diagram</title>
+  <style>
+    :root {
+      --color-black: #000000;
+      --color-white: #FFFFFF;
+      --color-navy-primary: #141B4D;
+      --color-navy-deep: #070263;
+      --color-indigo: #4F4CB1;
+      --color-sky: #178AE0;
+      --color-cyan-light: #85D6F9;
+      --color-solomon-blue: #003594;
+      --color-teal: #2FD1B2;
+      --color-ice-blue: #E3F7FC;
+      --color-lavender: #EDEAFB;
+      --color-link: #0E04C7;
+      --color-link-visited: #003594;
+      --color-border: #DDE3F0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--color-black);
+      background: var(--color-white);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .page-header {
+      background: var(--color-navy-primary);
+      padding: 40px 64px 32px;
+    }
+    .page-header .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-cyan-light);
+      margin-bottom: 10px;
+    }
+    .page-header h1 {
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--color-white);
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+    .page-header .meta {
+      font-size: 12px;
+      color: var(--color-cyan-light);
+      opacity: 0.85;
+    }
+    .page-header .meta span { margin-right: 22px; }
+
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 48px 56px 72px;
+    }
+
+    /* Section heading */
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      border-left: 3px solid var(--color-sky);
+      padding-left: 14px;
+      margin: 48px 0 22px;
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    /* ------- Architecture stack diagram ------- */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      align-items: center;
+    }
+
+    .layer {
+      width: 100%;
+      max-width: 1080px;
+      border-radius: 6px;
+      padding: 18px 24px;
+      position: relative;
+    }
+
+    .layer-label {
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--color-indigo);
+    }
+    .layer-label.on-navy { color: var(--color-cyan-light); }
+
+    /* User */
+    .layer-user {
+      background: var(--color-navy-primary);
+      color: var(--color-white);
+      text-align: center;
+      padding: 22px 24px;
+      max-width: 360px;
+    }
+    .layer-user .title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .layer-user .sub {
+      font-size: 12px;
+      color: var(--color-cyan-light);
+    }
+
+    /* Presentation */
+    .layer-presentation {
+      background: var(--color-lavender);
+      padding-top: 38px;
+    }
+    .layer-presentation .header-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .layer-presentation .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+    }
+    .layer-presentation .platform {
+      font-size: 12px;
+      color: var(--color-indigo);
+    }
+    .pres-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .pres-card {
+      background: var(--color-white);
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .pres-card .k {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-indigo);
+      margin-bottom: 4px;
+      display: block;
+    }
+    .pres-card .v { color: var(--color-navy-primary); line-height: 1.4; }
+
+    /* API Backend */
+    .layer-api {
+      background: var(--color-ice-blue);
+      padding-top: 38px;
+    }
+    .layer-api .header-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .layer-api .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+    }
+    .layer-api .platform {
+      font-size: 12px;
+      color: var(--color-indigo);
+    }
+    .layer-api .auth-line {
+      font-size: 12px;
+      color: var(--color-navy-primary);
+      margin-bottom: 12px;
+    }
+    .routes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px 14px;
+      background: var(--color-white);
+      border-radius: 4px;
+      padding: 12px 14px;
+    }
+    .route {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--color-navy-primary);
+    }
+    .verb {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 1px 5px;
+      border-radius: 2px;
+      min-width: 38px;
+      text-align: center;
+    }
+    .verb-get { background: #E3F7FC; color: #0068B0; }
+    .verb-post { background: #E8F5E9; color: #2E7D32; }
+    .verb-patch { background: #FFF8E1; color: #F57F17; }
+    .verb-delete { background: #FEECEC; color: #C62828; }
+    .route code {
+      font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+      font-size: 11px;
+      background: none;
+      color: var(--color-navy-deep);
+    }
+
+    /* Integration row (3 columns) */
+    .integration-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 1080px;
+    }
+    .int-card {
+      border-radius: 6px;
+      padding: 38px 18px 18px;
+      position: relative;
+    }
+    .int-card.ice { background: var(--color-ice-blue); }
+    .int-card.lavender { background: var(--color-lavender); }
+    .int-card .title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin-bottom: 6px;
+    }
+    .int-card .sub {
+      font-size: 11.5px;
+      color: var(--color-indigo);
+      margin-bottom: 10px;
+    }
+    .int-card ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+    }
+    .int-card li { margin-bottom: 3px; color: var(--color-navy-primary); }
+
+    /* Data connectivity */
+    .layer-connectivity {
+      background: var(--color-lavender);
+      padding-top: 38px;
+    }
+    .conn-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .conn-card {
+      background: var(--color-white);
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .conn-card .name {
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .conn-card .meta { font-size: 11px; color: var(--color-indigo); }
+
+    .layer-external {
+      background: var(--color-navy-primary);
+      color: var(--color-white);
+      padding: 24px 22px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .ext-pill {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-white);
+      padding: 4px 14px;
+      border-left: 2px solid var(--color-sky);
+    }
+
+    /* Arrows between layers */
+    .arrow {
+      width: 0;
+      height: 22px;
+      border-left: 2px dashed var(--color-indigo);
+      margin: 6px 0;
+      position: relative;
+    }
+    .arrow::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid var(--color-indigo);
+    }
+    .arrow-label {
+      position: absolute;
+      left: 14px;
+      top: 2px;
+      font-size: 11px;
+      color: var(--color-indigo);
+      white-space: nowrap;
+      background: var(--color-white);
+      padding: 0 6px;
+    }
+    .arrow.solid { border-left-style: solid; }
+
+    /* Triple fan-out arrows */
+    .fan {
+      width: 100%;
+      max-width: 1080px;
+      height: 28px;
+      position: relative;
+      margin: 4px 0;
+    }
+    .fan::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16.66%;
+      right: 16.66%;
+      height: 0;
+      border-top: 2px solid var(--color-indigo);
+    }
+    .fan .stem {
+      position: absolute;
+      top: 0;
+      width: 0;
+      height: 100%;
+      border-left: 2px solid var(--color-indigo);
+    }
+    .fan .stem::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid var(--color-indigo);
+    }
+    .fan .stem.left { left: 16.66%; }
+    .fan .stem.center { left: 50%; }
+    .fan .stem.right { right: 16.66%; }
+    .fan .stem-label {
+      position: absolute;
+      top: 6px;
+      transform: translateX(-50%);
+      left: 50%;
+      font-size: 10.5px;
+      color: var(--color-indigo);
+      background: var(--color-white);
+      padding: 0 4px;
+      white-space: nowrap;
+    }
+
+    /* Cross-cutting */
+    .crosscut-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .crosscut-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-sky);
+      border-radius: 4px;
+      padding: 14px 16px;
+    }
+    .crosscut-card .name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin-bottom: 4px;
+    }
+    .crosscut-card .desc {
+      font-size: 12px;
+      color: var(--color-black);
+    }
+
+    /* Auth flow */
+    .auth-flow {
+      background: var(--color-ice-blue);
+      border-radius: 6px;
+      padding: 24px;
+    }
+    .swim {
+      display: grid;
+      grid-template-columns: 130px 1fr 1fr 1fr 1fr;
+      column-gap: 8px;
+      align-items: center;
+      font-size: 12.5px;
+    }
+    .swim .header {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-indigo);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: 8px;
+    }
+    .swim .step-label {
+      color: var(--color-indigo);
+      font-weight: 600;
+      font-size: 11.5px;
+      padding-right: 10px;
+    }
+    .swim .node {
+      background: var(--color-white);
+      border-radius: 3px;
+      padding: 6px 8px;
+      color: var(--color-navy-primary);
+      font-size: 11.5px;
+      text-align: center;
+      border: 1px solid var(--color-border);
+    }
+    .swim .flow {
+      position: relative;
+      text-align: center;
+      color: var(--color-indigo);
+      font-size: 10.5px;
+    }
+    .swim .flow::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 14px;
+      height: 0;
+      border-top: 1.5px solid var(--color-indigo);
+    }
+    .swim .flow::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 6px solid var(--color-indigo);
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+    }
+    .swim .flow span {
+      position: relative;
+      background: var(--color-ice-blue);
+      padding: 0 6px;
+      top: -7px;
+    }
+    .swim .row {
+      display: contents;
+    }
+    .swim-row {
+      display: grid;
+      grid-template-columns: 130px 1fr 1fr 1fr 1fr;
+      column-gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    /* Build phases */
+    .phases {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      position: relative;
+    }
+    .phase-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 18px 18px 14px;
+      position: relative;
+    }
+    .phase-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--color-navy-primary);
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .phase-card.accent .phase-num {
+      background: var(--color-teal);
+      color: var(--color-navy-primary);
+    }
+    .phase-card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy-primary);
+      margin: 0 0 8px;
+    }
+    .phase-card ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+    }
+    .phase-card li {
+      margin-bottom: 4px;
+      color: var(--color-black);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 22px;
+      margin: 18px 0 4px;
+      font-size: 12px;
+      color: var(--color-navy-primary);
+      flex-wrap: wrap;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      vertical-align: -3px;
+      margin-right: 6px;
+    }
+
+    /* Footer */
+    .page-footer {
+      background: var(--color-navy-primary);
+      padding: 22px 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 56px;
+    }
+    .page-footer p {
+      font-size: 12px;
+      color: var(--color-cyan-light);
+      opacity: 0.75;
+      margin: 0;
+    }
+    .teal-bar {
+      width: 40px;
+      height: 3px;
+      background: var(--color-teal);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="label">Architecture Diagram &nbsp;·&nbsp; Sell-Side M&A Platform</div>
+    <h1>Code App Architecture</h1>
+    <div class="meta">
+      <span>Date: 2026-05-21</span>
+      <span>Author: Bryan Xiao</span>
+      <span>Companion to: 2026-05-20 Technical Design Spec</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Legend -->
+    <div class="legend">
+      <span><span class="legend-swatch" style="background:var(--color-lavender)"></span>Application layer</span>
+      <span><span class="legend-swatch" style="background:var(--color-ice-blue)"></span>API / integration layer</span>
+      <span><span class="legend-swatch" style="background:var(--color-navy-primary)"></span>Identity / external systems</span>
+      <span><span class="legend-swatch" style="background:var(--color-teal)"></span>Highlighted phase</span>
+    </div>
+
+    <!-- Full architecture -->
+    <h2>End-to-End Architecture</h2>
+
+    <div class="stack">
+
+      <!-- User -->
+      <div class="layer layer-user">
+        <div class="title">Banker (User)</div>
+        <div class="sub">Browser · Azure AD identity</div>
+      </div>
+
+      <div class="arrow"><span class="arrow-label">HTTPS</span></div>
+
+      <!-- Presentation -->
+      <div class="layer layer-presentation">
+        <span class="layer-label">Presentation Layer</span>
+        <div class="header-row">
+          <div class="title">React SPA</div>
+          <div class="platform">TypeScript · Vite · Azure Static Web Apps</div>
+        </div>
+        <div class="pres-grid">
+          <div class="pres-card">
+            <span class="k">pages/</span>
+            <span class="v">DealList<br>DealWorkspace</span>
+          </div>
+          <div class="pres-card">
+            <span class="k">tabs/</span>
+            <span class="v">Overview<br>Buyers · DD Q&A</span>
+          </div>
+          <div class="pres-card">
+            <span class="k">shared/</span>
+            <span class="v">StageSelector · MilestoneList<br>ActivityFeed · BuyerTable</span>
+          </div>
+          <div class="pres-card">
+            <span class="k">services / auth</span>
+            <span class="v">api.ts (typed fetch + bearer)<br>MSAL.js → Azure AD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow solid"><span class="arrow-label">HTTPS + AAD bearer token &nbsp;(scope: api://&lt;functions-app&gt;)</span></div>
+
+      <!-- API Backend -->
+      <div class="layer layer-api">
+        <span class="layer-label">API Backend</span>
+        <div class="header-row">
+          <div class="title">Azure Functions</div>
+          <div class="platform">Node.js · TypeScript</div>
+        </div>
+        <div class="auth-line">Easy Auth / JWT validation &nbsp;→&nbsp; OBO token exchange &nbsp;→&nbsp; managed identity for outbound calls</div>
+        <div class="routes">
+          <div class="route"><span class="verb verb-get">GET</span><span class="verb verb-post">POST</span><code>/api/deals</code></div>
+          <div class="route"><span class="verb verb-patch">PATCH</span><code>/api/deals/{id}</code></div>
+          <div class="route"><span class="verb verb-get">GET</span><span class="verb verb-post">POST</span><code>/api/deals/{id}/milestones</code></div>
+          <div class="route"><span class="verb verb-patch">PATCH</span><span class="verb verb-delete">DEL</span><code>/api/deals/{id}/milestones/{mId}</code></div>
+          <div class="route"><span class="verb verb-get">GET</span><span class="verb verb-post">POST</span><code>/api/deals/{id}/buyers</code></div>
+          <div class="route"><span class="verb verb-post">POST</span><code>/api/deals/{id}/buyers/generate</code></div>
+          <div class="route"><span class="verb verb-patch">PATCH</span><code>/api/deals/{id}/buyers/{bId}</code></div>
+          <div class="route"><span class="verb verb-get">GET</span><span class="verb verb-post">POST</span><code>/api/deals/{id}/qa</code></div>
+          <div class="route"><span class="verb verb-get">GET</span><code>/api/deals/{id}/activity</code></div>
+          <div class="route"><span class="verb verb-post">POST</span><code>/api/deals/{id}/export</code></div>
+        </div>
+      </div>
+
+      <!-- Fan-out to 3 integrations -->
+      <div class="fan">
+        <div class="stem left"><div class="stem-label">OBO token (as user)</div></div>
+        <div class="stem center"><div class="stem-label">Managed Identity</div></div>
+        <div class="stem right"><div class="stem-label">Shared secret (Key Vault)</div></div>
+      </div>
+
+      <!-- Integration row -->
+      <div class="integration-row">
+        <div class="int-card ice">
+          <span class="layer-label">Data</span>
+          <div class="title">Dataverse Web API</div>
+          <div class="sub">Business-Unit RLS · OData queries</div>
+          <ul>
+            <li><strong>Deals</strong></li>
+            <li><strong>Milestones</strong></li>
+            <li><strong>Buyers</strong></li>
+            <li><strong>BuyerCommunications</strong></li>
+            <li><strong>QALog</strong></li>
+            <li><strong>MeetingSummaries</strong></li>
+          </ul>
+        </div>
+        <div class="int-card lavender">
+          <span class="layer-label">AI</span>
+          <div class="title">Azure AI Foundry</div>
+          <div class="sub">RAG endpoint (DD Q&A)</div>
+          <ul>
+            <li>Question → answer + citations</li>
+            <li>Retrieves from deal SharePoint site</li>
+            <li>Retrieves from M365 content</li>
+            <li>Returns to <code>/api/deals/{id}/qa</code></li>
+          </ul>
+        </div>
+        <div class="int-card ice">
+          <span class="layer-label">Automation</span>
+          <div class="title">Power Automate</div>
+          <div class="sub">HTTP-triggered + background flows</div>
+          <ul>
+            <li>Buyer List generation (HTTP)</li>
+            <li>Export to SharePoint (HTTP)</li>
+            <li>Outlook / Teams monitoring (bg)</li>
+            <li>AI Builder thread summarize</li>
+            <li>Calls Copilot Studio orchestrator + Research Agent</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="arrow" style="margin-top:16px"><span class="arrow-label">Power Automate &nbsp;·&nbsp; Copilot Studio reads via</span></div>
+
+      <!-- Connectivity -->
+      <div class="layer layer-connectivity">
+        <span class="layer-label">Data Connectivity (unchanged)</span>
+        <div class="conn-grid">
+          <div class="conn-card">
+            <span class="name">M365 MCP</span>
+            <span class="meta">Read</span>
+          </div>
+          <div class="conn-card">
+            <span class="name">Fabric Data Agent</span>
+            <span class="meta">Read · DealCloud via silver layer (Max / Idris)</span>
+          </div>
+          <div class="conn-card">
+            <span class="name">Dataverse</span>
+            <span class="meta">Read / Write (also direct from Functions)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- External -->
+      <div class="layer layer-external">
+        <span class="ext-pill">SharePoint</span>
+        <span class="ext-pill">Outlook</span>
+        <span class="ext-pill">Teams</span>
+        <span class="ext-pill">DealCloud</span>
+        <span class="ext-pill">VDR staging</span>
+      </div>
+
+    </div>
+
+    <!-- Cross-cutting -->
+    <h2>Cross-Cutting Services</h2>
+    <div class="crosscut-grid">
+      <div class="crosscut-card">
+        <div class="name">Azure Key Vault</div>
+        <div class="desc">PA flow shared secret; referenced via Functions app settings.</div>
+      </div>
+      <div class="crosscut-card">
+        <div class="name">Application Insights</div>
+        <div class="desc">Request tracing, error logging from Functions.</div>
+      </div>
+      <div class="crosscut-card">
+        <div class="name">Azure DevOps</div>
+        <div class="desc">PR gates (lint / type-check / unit tests); main → SWA + Functions.</div>
+      </div>
+      <div class="crosscut-card">
+        <div class="name">Bicep (infra/)</div>
+        <div class="desc">SWA, Functions, Key Vault; manual approval on infra deploys.</div>
+      </div>
+    </div>
+
+    <!-- Auth flow -->
+    <h2>Authentication Flow (OBO + Business-Unit RLS)</h2>
+    <div class="auth-flow">
+      <div class="swim-row">
+        <div class="header">Step</div>
+        <div class="header" style="text-align:center">Banker A</div>
+        <div class="header" style="text-align:center">React SPA</div>
+        <div class="header" style="text-align:center">Functions</div>
+        <div class="header" style="text-align:center">Dataverse</div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">1 &nbsp; Sign in</div>
+        <div class="node">User</div>
+        <div class="flow"><span>MSAL → AAD</span></div>
+        <div></div>
+        <div></div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">2 &nbsp; Token</div>
+        <div></div>
+        <div class="node">Bearer (Functions scope)</div>
+        <div></div>
+        <div></div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">3 &nbsp; API call</div>
+        <div></div>
+        <div class="node">GET /api/deals</div>
+        <div class="flow"><span>HTTPS + bearer</span></div>
+        <div></div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">4 &nbsp; OBO exchange</div>
+        <div></div>
+        <div></div>
+        <div class="node">User-scoped DV token</div>
+        <div class="flow"><span>AAD OBO</span></div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">5 &nbsp; Query (as A)</div>
+        <div></div>
+        <div></div>
+        <div class="node">OData query</div>
+        <div class="flow"><span>BU-RLS filter</span></div>
+      </div>
+
+      <div class="swim-row">
+        <div class="step-label">6 &nbsp; Return</div>
+        <div></div>
+        <div class="node">Deal list (A's BUs only)</div>
+        <div></div>
+        <div class="node">Filtered records</div>
+      </div>
+    </div>
+
+    <!-- Build sequencing -->
+    <h2>Build Sequencing</h2>
+    <div class="phases">
+      <div class="phase-card">
+        <div class="phase-num">1</div>
+        <h4>Infrastructure &amp; Auth</h4>
+        <ul>
+          <li>SWA · Functions · Key Vault</li>
+          <li>Managed identity roles</li>
+          <li>MSAL app registration</li>
+          <li>Dataverse schema</li>
+          <li>ADO CI/CD pipeline</li>
+        </ul>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">2</div>
+        <h4>Deal PM Shell</h4>
+        <ul>
+          <li>DealList · DealWorkspace</li>
+          <li>StageSelector</li>
+          <li><code>/api/deals</code> + milestones</li>
+          <li>Overview tab CRUD</li>
+          <li>Activity feed (empty)</li>
+        </ul>
+      </div>
+      <div class="phase-card accent">
+        <div class="phase-num">3</div>
+        <h4>Buyers Module</h4>
+        <ul>
+          <li>Buyers endpoints + export</li>
+          <li>Buyers tab (inline edit)</li>
+          <li>PA Outlook / Teams monitoring</li>
+          <li>BuyerCommunications writes</li>
+          <li>Activity feed populated</li>
+        </ul>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">4</div>
+        <h4>DD Q&A</h4>
+        <ul>
+          <li>Foundry index over deal SP site</li>
+          <li><code>/api/deals/{id}/qa</code></li>
+          <li>DD Q&A tab + history</li>
+          <li>QALog → activity feed</li>
+          <li><em>Depends on VDR staging</em></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="page-footer">
+    <p>Solomon Partners &nbsp;·&nbsp; Sell-Side M&A Platform &nbsp;·&nbsp; Architecture Diagram &nbsp;·&nbsp; 2026-05-21</p>
+    <div class="teal-bar"></div>
+  </div>
+
+</body>
+</html>

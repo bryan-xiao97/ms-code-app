@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Process \"C:\\\\Users\\\\Bryan.Xiao\\\\OneDrive - Solomon Partners, L.P\\\\Bryan_Docs\\\\Projects_Code\\\\Sellside-MA\\\\prototypes\\\\deal-pm-phase2-ui.html\")"
+    ]
+  }
+}
