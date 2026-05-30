@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
+import { dueSoon } from "@/lib/milestone";
 
 type Milestone = {
   id: string;
@@ -12,15 +13,6 @@ type Milestone = {
   due_date: string;
   status: "pending" | "done" | "skipped";
 };
-
-const DUE_SOON_DAYS = 5;
-
-function dueSoon(dueDate: string): boolean {
-  const due = new Date(dueDate);
-  const now = new Date();
-  const diff = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-  return diff >= 0 && diff <= DUE_SOON_DAYS;
-}
 
 export function MilestoneList({ dealId }: { dealId: string }) {
   const supabase = createClient();

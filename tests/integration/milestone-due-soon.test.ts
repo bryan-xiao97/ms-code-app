@@ -1,12 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-// Re-implement the function under test here to avoid bundling React into the test.
-// If the logic moves to lib/, import it from there instead.
-function dueSoon(dueDate: string, today: Date = new Date()): boolean {
-  const due = new Date(dueDate);
-  const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-  return diff >= 0 && diff <= 5;
-}
+import { dueSoon } from "@/lib/milestone";
 
 describe("dueSoon", () => {
   const today = new Date("2026-05-28T12:00:00Z");
