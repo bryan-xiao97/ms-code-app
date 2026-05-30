@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StageSelector } from "@/components/deal/StageSelector";
 import { MilestoneList } from "@/components/deal/MilestoneList";
+import { ActivityFeed } from "@/components/deal/ActivityFeed";
 
 export default async function OverviewPage({
   params,
@@ -23,8 +24,14 @@ export default async function OverviewPage({
         <h2 className="text-sm font-semibold text-slate-900 mb-3">Milestones</h2>
         <MilestoneList dealId={deal.id} />
       </section>
-      <aside className="rounded-md border border-slate-200 bg-white p-5 space-y-4">
-        <StageSelector dealId={deal.id} initialStage={deal.stage} />
+      <aside className="space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5">
+          <StageSelector dealId={deal.id} initialStage={deal.stage} />
+        </div>
+        <div className="rounded-md border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">Activity</h2>
+          <ActivityFeed dealId={deal.id} />
+        </div>
       </aside>
     </div>
   );
