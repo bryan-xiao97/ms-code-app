@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DealList } from "@/components/deal/DealList";
+import { CreateDealForm } from "@/components/deal/CreateDealForm";
 
 export default async function DealsPage() {
   const supabase = await createClient();
@@ -10,9 +11,8 @@ export default async function DealsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Deals</h1>
-      </div>
+      <h1 className="text-2xl font-semibold text-slate-900 mb-6">Deals</h1>
+      <CreateDealForm />
       <DealList deals={deals ?? []} />
     </div>
   );
