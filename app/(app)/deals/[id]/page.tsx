@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StageSelector } from "@/components/deal/StageSelector";
+import { MilestoneList } from "@/components/deal/MilestoneList";
 
 export default async function OverviewPage({
   params,
@@ -20,9 +21,9 @@ export default async function OverviewPage({
     <div className="grid gap-6 md:grid-cols-3">
       <section className="md:col-span-2 rounded-md border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-slate-900 mb-3">Milestones</h2>
-        <p className="text-sm text-slate-500">Milestones list will go here.</p>
+        <MilestoneList dealId={deal.id} />
       </section>
-      <aside className="rounded-md border border-slate-200 bg-white p-5">
+      <aside className="rounded-md border border-slate-200 bg-white p-5 space-y-4">
         <StageSelector dealId={deal.id} initialStage={deal.stage} />
       </aside>
     </div>
