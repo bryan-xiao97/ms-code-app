@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  lint-types-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+      - run: pnpm exec tsc --noEmit
+
+      - name: Start Supabase
+        run: pnpm exec supabase start --ignore-health-check
+        env:
+          SUPABASE_DB_PASSWORD: postgres
+
+      - name: Capture Supabase env
+        run: |
+          STATUS=$(pnpm exec supabase status -o env)
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(echo "$STATUS" | grep API_URL | cut -d= -f2-)"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo "$STATUS" | grep ANON_KEY | cut -d= -f2-)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$STATUS" | grep SERVICE_ROLE_KEY | cut -d= -f2-)"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3000"
+          } >> .env.local
+
+      - run: pnpm test
