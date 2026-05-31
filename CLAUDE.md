@@ -1,6 +1,6 @@
 # Solomon Partners Sell-Side M&A Platform
 
-This repo currently holds specs and prototypes for a sell-side M&A platform being built for Solomon Partners. Implementation code does not exist yet; when it lands, it will follow the planned `frontend/`, `backend/`, `infra/`, `.azure-pipelines/` layout. This CLAUDE.md must be updated alongside any code scaffold.
+This repo holds a sell-side M&A platform being built for Solomon Partners. Phase 1 + Phase 2 are implemented on a Next.js 16 + Supabase stack. This CLAUDE.md must be kept in sync with the shipped code; see the Module map section for the current layout.
 
 ## Read this first
 
@@ -15,32 +15,47 @@ Before proposing anything domain-shaped, read `process.md`. It is the banker-wor
 
 ## Module map and build phases
 
-No source code modules exist yet. The planned build sequence from the authoritative spec is:
+Phase 1 + Phase 2 are implemented. Source layout:
 
-- Phase 1 — Infrastructure and Auth: Azure Static Web Apps, Azure Functions, Key Vault, managed identity, MSAL app registration, Dataverse schema, Azure DevOps pipeline gates.
-- Phase 2 — Deal PM shell (current focus): DealList, DealWorkspace shell, StageSelector, Overview tab with stage indicator and milestone CRUD, backend `/api/deals` and `/api/deals/{id}/milestones` endpoints. Active design doc: `specs/code-app/deal-pm-phase2-design.md`. Active prototype: `prototypes/deal-pm-phase2-ui.html`.
-- Phase 3 — Buyers module: buyer table, inline editing, overdue indicators, Power Automate background flows, activity feed for buyer events. Builds on existing ADO Epic 4031.
-- Phase 4 — DD Q&A: Azure AI Foundry index over deal SharePoint site, Q&A tab, export. Depends on VDR staging being operationalized.
+- `app/` — Next.js 16 App Router. Protected routes under `(app)/`, marketing under `(marketing)/`.
+- `components/deal/` — DealList, StageSelector, MilestoneList, ActivityFeed, etc.
+- `components/ui/` — Button, Input, Select, Surface primitives.
+- `lib/supabase/` — browser, server, and service-role clients.
+- `lib/auth.ts` — `requireUser()` helper used by protected layouts.
+- `supabase/migrations/` — versioned schema and RLS migrations.
+- `supabase/seed.sql` — local-dev seed.
+- `tests/integration/` — Vitest against local Supabase (RLS proofs, action behavior).
+- `tests/e2e/` — Playwright golden paths.
+
+Phase build status:
+
+- Phase 1 (Foundation): ✅ shipped — see `plans/oss-app/2026-05-28-phase-1-2-foundation-deal-pm.md`
+- Phase 2 (Deal PM shell): ✅ shipped — same plan
+- Phase 3 (DD Q&A RAG): ⏳ separate plan to be drafted
+- Phase 4 (Buyers + IMAP): ⏳ separate plan to be drafted
+- Phase 5 (Polish): optional
 
 ## Stack constraints
 
-- Frontend: React + TypeScript, Vite or CRA, hosted on Azure Static Web Apps.
-- Backend: Azure Functions (Node.js / TypeScript). No Express. No separate server process.
-- Auth: MSAL.js on the front end; Azure AD OBO flow on the backend; system-assigned managed identity for Dataverse and Foundry. No API keys for those services.
-- State: Dataverse only. No separate operational database.
-- The frontend never calls Dataverse directly. All Dataverse access goes through the Functions backend.
-- CI/CD: Azure DevOps. PR gate runs lint, type-check, and unit tests on both frontend and backend.
+- Frontend: Next.js 16 App Router (TypeScript strict), Tailwind CSS 4, hosted on Vercel.
+- Backend: Next.js Server Actions and Route Handlers. No separate API server.
+- Auth: Supabase Auth (email magic link). Middleware in `middleware.ts` redirects unauthenticated users to `/sign-in`.
+- State: Supabase Postgres. Deal isolation enforced by RLS keyed off `deal_members(deal_id, user_id)`.
+- pgvector extension is enabled on day one for use in Phase 3.
+- The frontend talks to Supabase directly for simple CRUD (RLS gates access). Server Actions are used when service-role privileges or atomic multi-row writes are required.
+- CI/CD: GitHub Actions. PR gate runs lint, type-check, and Vitest. E2E runs on pushes to main.
 
 ## Resolved decisions — do not reopen
 
-- Code App is the chosen implementation path. Canvas App is not being built.
-- Single shared Dataverse environment. Deal-level isolation is enforced via Business Units and OBO-based RLS.
-- SharePoint site provisioning is manual at engagement start for v1. Automation is deferred.
-- Activity feed page limit = 10 items. Milestone "Due Soon" threshold = 5 days. Buyer follow-up overdue threshold = 14 days.
+- Open-source stack chosen over the Microsoft Code App path. See `specs/oss-app/2026-05-28-sell-side-ma-platform-oss-design.md`.
+- Supabase is the backend platform (Postgres + Auth + Storage + pgvector).
+- Deal isolation = Postgres RLS via `deal_members`. No Business Units, no OBO.
+- Activity feed page limit = 10. Milestone "Due Soon" = 5 days. Buyer follow-up overdue = 14 days (used in Phase 4).
 
 ## Open questions
 
-- VDR staging automation: Intralinks, Datasite, and Ansarada all expose APIs. The vendor choice and API coverage are undecided. Phase 4 is blocked until this is resolved.
+- VDR staging automation (deferred until Phase 4 polish): same options as the original spec — Intralinks / Datasite / Ansarada APIs. Manual upload to Supabase Storage is the v1 pattern.
+- Real buyer data source: Crunchbase / Apollo / public filings — integration point is `step "gather_context"` of the Phase 4 `buyer.generate` Inngest workflow.
 
 ## Cross-platform working note
 
@@ -53,11 +68,11 @@ The repo lives in OneDrive and is opened from two machines:
 
 ## Current repo state
 
-No source code exists. There is no `package.json`, no `tsconfig.json`, no lint config, and no test suite. The files present are:
+Phase 1 + Phase 2 source code now exists (Next.js 16 + Supabase, with `package.json`, `tsconfig.json`, lint config, and Vitest/Playwright suites). See the Module map section for the layout. Other notable files:
 
 - `process.md` — domain vocabulary and banker workflow primer.
 - `specs/` — design specs and their rendered HTML exports.
 - `prototypes/deal-pm-phase2-ui.html` — the latest Phase 2 UI mockup as of 2026-05-28, subject to iteration.
 - `.claude/settings.local.json` — local Claude permissions (Windows-only entry).
 
-When implementation code is scaffolded, update the Module map section of this file to reflect the actual directory structure.
+As later phases land, keep the Module map section of this file in sync with the actual directory structure.
