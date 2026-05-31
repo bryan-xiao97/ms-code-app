@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Start-Process \"C:\\\\Users\\\\Bryan.Xiao\\\\OneDrive - Solomon Partners, L.P\\\\Bryan_Docs\\\\Projects_Code\\\\Sellside-MA\\\\prototypes\\\\deal-pm-phase2-ui.html\")"
+      "PowerShell(Start-Process \"C:\\\\Users\\\\Bryan.Xiao\\\\OneDrive - Solomon Partners, L.P\\\\Bryan_Docs\\\\Projects_Code\\\\Sellside-MA\\\\prototypes\\\\deal-pm-phase2-ui.html\")",
+      "Skill(superpowers:writing-plans)",
+      "Bash(pnpm --version)",
+      "Bash(docker --version)",
+      "Bash(docker info *)",
+      "Bash(grep -vE '^\\\\.git$')",
+      "Bash(git checkout *)",
+      "Bash(docker version *)",
+      "Bash(pnpm dlx *)"
     ]
+  },
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
   }
 }
