@@ -16,6 +16,9 @@ export interface ChunkOptions {
 export function chunkText(text: string, opts: ChunkOptions = {}): Chunk[] {
   const chunkSize = opts.chunkSize ?? 1000;
   const overlap = opts.overlap ?? 200;
+  if (overlap >= chunkSize) {
+    throw new Error("chunkText: overlap must be less than chunkSize");
+  }
   const normalized = text.replace(/\r\n/g, "\n").trim();
   if (normalized.length === 0) return [];
   if (normalized.length <= chunkSize) return [{ index: 0, content: normalized }];

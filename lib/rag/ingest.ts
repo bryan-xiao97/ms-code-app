@@ -66,23 +66,42 @@ export async function ingestDocument({ documentId, deps }: IngestArgs): Promise<
       .update({ page_count: parsed.pageCount, ingest_status: "embedding" })
       .eq("id", documentId);
 
-    // Clear any prior chunks (idempotent re-ingest).
-    await supabase.from("document_chunks").delete().eq("document_id", documentId);
-
+    // Embed all batches first. Only after every embedding succeeds do we replace
+    // the existing chunks, so a mid-embed failure never leaves the document with
+    // zero chunks (it stays queryable on its prior content until re-ingest succeeds).
+    type ChunkRow = {
+      document_id: string;
+      deal_id: string;
+      chunk_index: number;
+      page: number | null;
+      content: string;
+      embedding: string;
+    };
+    const rows: ChunkRow[] = [];
     for (let i = 0; i < chunks.length; i += EMBED_BATCH) {
       const batch = chunks.slice(i, i + EMBED_BATCH);
       const vectors = await llm.embed({ texts: batch.map((c) => c.content) });
-      const rows = batch.map((c, j) => ({
-        document_id: documentId,
-        deal_id: doc.deal_id,
-        chunk_index: c.index,
-        page: null as number | null,
-        content: c.content,
-        embedding: toPgVector(vectors[j]!, EMBED_DIM),
-      }));
-      const { error: insErr } = await supabase.from("document_chunks").insert(rows);
-      if (insErr) throw new Error(`Chunk insert failed: ${insErr.message}`);
+      if (vectors.length !== batch.length) {
+        throw new Error(
+          `Embed returned ${vectors.length} vectors for ${batch.length} inputs`
+        );
+      }
+      batch.forEach((c, j) => {
+        rows.push({
+          document_id: documentId,
+          deal_id: doc.deal_id,
+          chunk_index: c.index,
+          page: null,
+          content: c.content,
+          embedding: toPgVector(vectors[j]!, EMBED_DIM),
+        });
+      });
     }
+
+    // Replace prior chunks (idempotent re-ingest) now that embeddings are ready.
+    await supabase.from("document_chunks").delete().eq("document_id", documentId);
+    const { error: insErr } = await supabase.from("document_chunks").insert(rows);
+    if (insErr) throw new Error(`Chunk insert failed: ${insErr.message}`);
 
     await setStatus(supabase, documentId, "ready");
   } catch (err) {

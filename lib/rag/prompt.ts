@@ -50,7 +50,7 @@ export function extractCitations(
   const byDocPage = new Map<string, RetrievedChunk>();
   for (const c of chunks) byDocPage.set(`${c.document_id}:${c.page ?? "?"}`, c);
 
-  const re = /\[doc:([^\s\]]+)\s+page:([^\]]+)\]/g;
+  const re = /\[doc:([^\s\]]+)\s+page:(\d+|\?)\]/g;
   const seen = new Set<string>();
   const cites: Citation[] = [];
   let m: RegExpExecArray | null;
