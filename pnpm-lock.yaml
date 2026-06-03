@@ -57,9 +57,6 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.41
-      '@types/pdf-parse':
-        specifier: ^1.1.5
-        version: 1.1.5
       '@types/react':
         specifier: ^19
         version: 19.2.15
@@ -1525,9 +1522,6 @@ packages:
 
   '@types/oracledb@6.5.2':
     resolution: {integrity: sha512-kK1eBS/Adeyis+3OlBDMeQQuasIDLUYXsi2T15ccNJ0iyUpQ4xDF7svFu3+bGVrI0CMBUclPciz+lsQR3JX3TQ==}
-
-  '@types/pdf-parse@1.1.5':
-    resolution: {integrity: sha512-kBfrSXsloMnUJOKi25s3+hRmkycHfLK6A09eRGqF/N8BkQoPUmaCr+q8Cli5FnfohEz/rsv82zAiPz/LXtOGhA==}
 
   '@types/pg-pool@2.0.7':
     resolution: {integrity: sha512-U4CwmGVQcbEuqpyju8/ptOKg6gEC+Tqsvj2xS9o1g71bUh8twxnC6ZL5rZKCsGN0iyH0CwgUyc9VR5owNQF9Ng==}
@@ -5199,10 +5193,6 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/oracledb@6.5.2':
-    dependencies:
-      '@types/node': 20.19.41
-
-  '@types/pdf-parse@1.1.5':
     dependencies:
       '@types/node': 20.19.41
 

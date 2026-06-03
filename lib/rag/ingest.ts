@@ -99,7 +99,11 @@ export async function ingestDocument({ documentId, deps }: IngestArgs): Promise<
     }
 
     // Replace prior chunks (idempotent re-ingest) now that embeddings are ready.
-    await supabase.from("document_chunks").delete().eq("document_id", documentId);
+    const { error: delErr } = await supabase
+      .from("document_chunks")
+      .delete()
+      .eq("document_id", documentId);
+    if (delErr) throw new Error(`Chunk cleanup failed: ${delErr.message}`);
     const { error: insErr } = await supabase.from("document_chunks").insert(rows);
     if (insErr) throw new Error(`Chunk insert failed: ${insErr.message}`);
 

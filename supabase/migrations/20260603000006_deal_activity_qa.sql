@@ -11,3 +11,7 @@ create or replace view public.deal_activity as
   from public.qa_log q;
 
 alter view public.deal_activity owner to postgres;
+
+-- NOTE: Phase 4 must CREATE OR REPLACE this view again to UNION ALL its event
+-- sources (buyer_communications, generated buyers) alongside the qa events here.
+-- Until then, deal_activity surfaces Q&A events only.

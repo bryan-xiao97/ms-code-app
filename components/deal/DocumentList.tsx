@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Doc = {
@@ -21,7 +21,7 @@ const STATUS_STYLES: Record<Doc["ingest_status"], string> = {
 };
 
 export function DocumentList({ dealId, refreshKey }: { dealId: string; refreshKey: number }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

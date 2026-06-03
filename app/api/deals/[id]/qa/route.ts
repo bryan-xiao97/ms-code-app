@@ -53,7 +53,10 @@ export async function POST(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     return NextResponse.json(
-      { error: "AI temporarily unavailable.", detail: message },
+      {
+        error: "AI temporarily unavailable.",
+        ...(process.env.NODE_ENV !== "production" ? { detail: message } : {}),
+      },
       { status: 502 }
     );
   }
