@@ -21,6 +21,10 @@ Phase 1 + Phase 2 are implemented. Source layout:
 - `components/deal/` — DealList, StageSelector, MilestoneList, ActivityFeed, etc.
 - `components/ui/` — Button, Input, Select, Surface primitives.
 - `lib/supabase/` — browser, server, and service-role clients.
+- `lib/llm.ts` — provider-agnostic LLM (Gemini default); `lib/rag/` — chunk, prompt, ingest.
+- `inngest/` — Inngest client + `doc.ingest` workflow; `app/api/inngest/route.ts` is the webhook.
+- `app/api/deals/[id]/qa/` — RAG query route (`route.ts`) + testable core (`answer.ts`); `app/(app)/deals/[id]/qa/` — DD Q&A tab page + `uploadDocument` action (`actions.ts`) + `storage-path.ts` helper.
+- `components/deal/` — DocumentUpload, DocumentList, QAPanel (Phase 3).
 - `lib/auth.ts` — `requireUser()` helper used by protected layouts.
 - `supabase/migrations/` — versioned schema and RLS migrations.
 - `supabase/seed.sql` — local-dev seed.
@@ -31,7 +35,7 @@ Phase build status:
 
 - Phase 1 (Foundation): ✅ shipped — see `plans/oss-app/2026-05-28-phase-1-2-foundation-deal-pm.md`
 - Phase 2 (Deal PM shell): ✅ shipped — same plan
-- Phase 3 (DD Q&A RAG): ⏳ separate plan to be drafted
+- Phase 3 (DD Q&A RAG): ✅ shipped — see `plans/oss-app/2026-06-03-phase-3-dd-qa-rag.md`
 - Phase 4 (Buyers + IMAP): ⏳ separate plan to be drafted
 - Phase 5 (Polish): optional
 
@@ -44,6 +48,7 @@ Phase build status:
 - pgvector extension is enabled on day one for use in Phase 3.
 - The frontend talks to Supabase directly for simple CRUD (RLS gates access). Server Actions are used when service-role privileges or atomic multi-row writes are required.
 - CI/CD: GitHub Actions. PR gate runs lint, type-check, and Vitest. E2E runs on pushes to main.
+- DD Q&A (Phase 3) requires the Inngest dev server (`pnpm inngest:dev`) and a `GEMINI_API_KEY` for local document ingestion and RAG. The Inngest webhook route `/api/inngest` is public (bypasses auth middleware) since Inngest authenticates with its own signing key.
 
 ## Resolved decisions — do not reopen
 
