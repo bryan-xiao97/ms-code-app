@@ -5,6 +5,9 @@ on:
     branches: [master, main]
   pull_request:
 
+packages:
+  - '.'
+
 jobs:
   lint-types-test:
     runs-on: ubuntu-latest
