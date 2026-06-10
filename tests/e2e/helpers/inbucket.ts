@@ -26,7 +26,7 @@ interface MailpitMessage {
   HTML: string;
 }
 
-export async function getMagicLink(email: string): Promise<string> {
+export async function getConfirmationLink(email: string): Promise<string> {
   const start = Date.now();
   while (Date.now() - start < 10_000) {
     const list: MailpitMessageList = await fetch(`${BASE}/api/v1/messages`)
@@ -56,7 +56,7 @@ export async function getMagicLink(email: string): Promise<string> {
 
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error(`No magic link arrived for ${email} in 10s`);
+  throw new Error(`No confirmation link arrived for ${email} in 10s`);
 }
 
 export async function clearInbucket(): Promise<void> {
