@@ -25,7 +25,8 @@ Phase 1 + Phase 2 are implemented. Source layout:
 - `inngest/` — Inngest client + `doc.ingest` workflow; `app/api/inngest/route.ts` is the webhook.
 - `app/api/deals/[id]/qa/` — RAG query route (`route.ts`) + testable core (`answer.ts`); `app/(app)/deals/[id]/qa/` — DD Q&A tab page + `uploadDocument` action (`actions.ts`) + `storage-path.ts` helper.
 - `components/deal/` — DocumentUpload, DocumentList, QAPanel (Phase 3).
-- `lib/auth.ts` — `requireUser()` helper used by protected layouts.
+- `lib/auth.ts` — `requireUser()` helper used by protected layouts; `lib/auth/validation.ts` + `lib/auth/safe-next.ts` — auth input validation and redirect guard.
+- `app/(marketing)/sign-in`, `sign-up`, `forgot-password`, `reset-password` — email + password auth pages and their server actions; `app/auth/callback/route.ts` handles email-confirmation and password-recovery links.
 - `supabase/migrations/` — versioned schema and RLS migrations.
 - `supabase/seed.sql` — local-dev seed.
 - `tests/integration/` — Vitest against local Supabase (RLS proofs, action behavior).
@@ -43,7 +44,7 @@ Phase build status:
 
 - Frontend: Next.js 16 App Router (TypeScript strict), Tailwind CSS 4, hosted on Vercel.
 - Backend: Next.js Server Actions and Route Handlers. No separate API server.
-- Auth: Supabase Auth (email magic link). Middleware in `middleware.ts` redirects unauthenticated users to `/sign-in`.
+- Auth: Supabase Auth (email + password with self-service sign-up and required email confirmation). Middleware in `middleware.ts` redirects unauthenticated users to `/sign-in`.
 - State: Supabase Postgres. Deal isolation enforced by RLS keyed off `deal_members(deal_id, user_id)`.
 - pgvector extension is enabled on day one for use in Phase 3.
 - The frontend talks to Supabase directly for simple CRUD (RLS gates access). Server Actions are used when service-role privileges or atomic multi-row writes are required.
