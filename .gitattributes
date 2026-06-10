@@ -1,0 +1,16 @@
+# Normalize line endings across machines (repo is opened from both Windows and Mac via OneDrive).
+# Treat all text files as text and check them out with LF, so CRLF/LF churn stops showing up in diffs.
+* text=auto eol=lf
+
+# Explicitly mark binary file types so git never tries to normalize them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
