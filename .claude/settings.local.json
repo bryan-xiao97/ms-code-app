@@ -9,7 +9,9 @@
       "Bash(grep -vE '^\\\\.git$')",
       "Bash(git checkout *)",
       "Bash(docker version *)",
-      "Bash(pnpm dlx *)"
+      "Bash(pnpm dlx *)",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(git diff *)"
     ]
   },
   "sandbox": {
