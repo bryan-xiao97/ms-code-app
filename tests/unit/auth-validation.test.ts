@@ -5,6 +5,7 @@ import {
   passwordsMatch,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/auth/validation";
+import { safeNext } from "@/lib/auth/safe-next";
 
 describe("validateEmail", () => {
   it("returns null for a valid address", () => {
@@ -35,5 +36,23 @@ describe("passwordsMatch", () => {
   });
   it("is false when different", () => {
     expect(passwordsMatch("abc", "abd")).toBe(false);
+  });
+});
+
+describe("safeNext", () => {
+  it("allows an app-relative path", () => {
+    expect(safeNext("/deals/123")).toBe("/deals/123");
+  });
+  it("falls back on null", () => {
+    expect(safeNext(null)).toBe("/deals");
+  });
+  it("rejects a protocol-relative path", () => {
+    expect(safeNext("//evil.com")).toBe("/deals");
+  });
+  it("rejects a backslash-smuggled path", () => {
+    expect(safeNext("/\\evil.com")).toBe("/deals");
+  });
+  it("honours a custom fallback", () => {
+    expect(safeNext(null, "/sign-in")).toBe("/sign-in");
   });
 });
