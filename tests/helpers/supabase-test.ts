@@ -45,8 +45,18 @@ export async function createTestUser(email: string): Promise<{
 /** Wipe all rows from public tables; safe because we run against local DB only. */
 export async function resetDb(): Promise<void> {
   const svc = serviceClient();
-  const tables = ["milestones", "deal_members", "deals"] as const;
+  const tables = [
+    "qa_log",
+    "document_chunks",
+    "documents",
+    "milestones",
+    "deal_members",
+    "deals",
+  ] as const;
   const keyCol: Record<(typeof tables)[number], string> = {
+    qa_log: "id",
+    document_chunks: "id",
+    documents: "id",
     milestones: "id",
     deal_members: "deal_id",
     deals: "id",
@@ -57,6 +67,20 @@ export async function resetDb(): Promise<void> {
       .delete()
       .neq(keyCol[t], "00000000-0000-0000-0000-000000000000");
     if (error) throw new Error(`resetDb: ${t} delete failed: ${error.message}`);
+  }
+  // Clear storage objects so signed-URL/download tests start clean.
+  const { data: objs } = await svc.storage.from("deal-documents").list("", {
+    limit: 1000,
+  });
+  if (objs && objs.length > 0) {
+    // Top-level entries are deal_id folders; remove recursively by listing each.
+    for (const top of objs) {
+      const { data: inner } = await svc.storage
+        .from("deal-documents")
+        .list(top.name, { limit: 1000 });
+      const paths = (inner ?? []).map((f) => `${top.name}/${f.name}`);
+      if (paths.length > 0) await svc.storage.from("deal-documents").remove(paths);
+    }
   }
   // Clear auth users
   const { data: users, error: listErr } = await svc.auth.admin.listUsers({ perPage: 1000 });
