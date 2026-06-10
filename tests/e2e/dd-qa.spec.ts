@@ -1,6 +1,7 @@
 import path from "node:path";
 import { test, expect } from "@playwright/test";
-import { getMagicLink, clearInbucket } from "./helpers/inbucket";
+import { clearInbucket } from "./helpers/inbucket";
+import { registerAndSignIn } from "./helpers/auth";
 
 // Prerequisites to actually PASS (not skip): local Supabase running, the Next dev
 // server running, the Inngest dev server running (`pnpm inngest:dev`), and a real
@@ -14,12 +15,7 @@ test.beforeEach(async () => {
 test("upload a document, ingest it, and get a cited answer", async ({ page }) => {
   const email = `qa-${Date.now()}@test.local`;
 
-  await page.goto("/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: /send magic link/i }).click();
-  const link = await getMagicLink(email);
-  await page.goto(link);
-  await expect(page).toHaveURL(/\/deals$/);
+  await registerAndSignIn(page, email);
 
   // Create a deal
   await page.getByLabel("Deal name").fill("Project QA");

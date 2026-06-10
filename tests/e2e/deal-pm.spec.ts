@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { getMagicLink, clearInbucket } from "./helpers/inbucket";
+import { clearInbucket } from "./helpers/inbucket";
+import { registerAndSignIn } from "./helpers/auth";
 
 test.beforeEach(async () => {
   await clearInbucket();
@@ -8,13 +9,8 @@ test.beforeEach(async () => {
 test("user can create a deal, change stage, add a milestone", async ({ page }) => {
   const email = `pm-${Date.now()}@test.local`;
 
-  // Sign in
-  await page.goto("/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: /send magic link/i }).click();
-  const link = await getMagicLink(email);
-  await page.goto(link);
-  await expect(page).toHaveURL(/\/deals$/);
+  // Register, confirm, and land on /deals
+  await registerAndSignIn(page, email);
 
   // Create deal
   await page.getByLabel("Deal name").fill("Project E2E");
